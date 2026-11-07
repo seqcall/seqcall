@@ -1,0 +1,7 @@
+{
+    "name": "seqcall/php-app",
+    "description": "Layered Laravel-style fixture for the PHP adapter (FR-18). Analysed only, never executed.",
+    "require": { "php": "^8.1" },
+    "autoload": { "psr-4": { "App\\": "src/" }, "files": ["src/Support/helpers.php"] },
+    "autoload-dev": { "psr-4": { "Tests\\": "tests/" } }
+}

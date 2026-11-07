@@ -1,0 +1,432 @@
+════ http POST /api/orders (src/Http/Controllers/OrderController.php#OrderController.store)
+── opened
+participants: Container «external» | Pipeline «external» | :OrderController «controller» [Presentation] | :OrderService «service» [Application] | :Order [Domain]
+found · → Container: resolve(OrderController::class)  ⊕
+found · → Pipeline: through(api)  ⊕
+found · → :OrderController: store()  ⊖
+  call :OrderController → :OrderService: placeOrder((int) $request->input('user'), $request->input('items', []))  ⊕
+  call :OrderController → :Order: toArray()  ⊕
+── Overview
+participants: Container «external» | Pipeline «external» | :OrderController «controller» [Presentation] | :OrderService «service» [Application] | Pricing «static» [Domain] | Order «static» [Domain] | order:Order [Domain] | order:Order [Domain] | :OrderRepositoryContract «interface, repository, seam, port» [Infrastructure] | :StripeGateway «seam, singleton» [Infrastructure] | :EmailNotifier | :MailChannel
+found · → Container: resolve(OrderController::class)  ⊕
+found · → Pipeline: through(api)  ⊕
+found · → :OrderController: store()  ⊖
+  call :OrderController → :OrderService: placeOrder((int) $request->input('user'), $request->input('items', []))  ⊖
+    call :OrderService → :OrderRepositoryContract: findUser($userId)  impls: EloquentOrderRepository, InMemoryOrderRepository
+    ┌ loop [each $item of $items]
+    ↯ throw [$user === null] InvalidArgumentException (leaves placeOrder)
+    call :OrderService → Pricing: priceOf($item['sku'], $item['qty'])  ⊕
+    ┌ alt [$total > 100 / $total === 0]
+    call :OrderService → :EmailNotifier: notify($user, 'big order')  ⊖
+      self :EmailNotifier → :EmailNotifier: channel()  ⊕ · impls: EmailNotifier → EmailNotifier
+      self :EmailNotifier → :EmailNotifier: format($message)
+      call :EmailNotifier → :MailChannel: send($user['email'], $this->format($message))  impls: MailChannel → MailChannel
+    call :OrderService → Order: empty()  ⊕
+    ↯ return (leaves placeOrder)
+    call :OrderService → :StripeGateway: charge($userId, $total)  ⊕ · impls: StripeGateway → StripeGateway · I/O: http
+    ↯ branch [catch PaymentFailed] (leaves placeOrder)
+    create :OrderService → order:Order: constructor($userId, $total, $receipt)
+    ┌ loop [each $item of collect(…)]
+    call :OrderService → :OrderRepositoryContract: reserve($item['sku'])  impls: EloquentOrderRepository, InMemoryOrderRepository
+    call :OrderService → order:Order: withStatus($status)
+    call :OrderService → :OrderRepositoryContract: save($order->withStatus($status))  impls: EloquentOrderRepository, InMemoryOrderRepository
+  call :OrderController → order:Order: toArray()  ⊕
+⚠ layer-violation: Layer violation: OrderService → OrderRepositoryContract
+── Expand all
+participants: Container «external» | Pipeline «external» | :OrderController «controller» [Presentation] | :OrderService «service» [Application] | Pricing «static» [Domain] | Order «static» [Domain] | :Order [Domain] | order:Order [Domain] | order:Order [Domain] | :OrderRepositoryContract «interface, repository, seam, port» [Infrastructure] | :StripeGateway «seam, singleton» [Infrastructure] | :EmailNotifier | :MailChannel | :MailChannel | helpers «module, static»
+found · → Container: resolve(OrderController::class)  ⊕
+found · → Pipeline: through(api)  ⊕
+found · → :OrderController: store()  ⊖
+  call :OrderController → :OrderService: placeOrder((int) $request->input('user'), $request->input('items', []))  ⊖
+    call :OrderService → :OrderRepositoryContract: findUser($userId)  impls: EloquentOrderRepository, InMemoryOrderRepository
+    ┌ loop [each $item of $items]
+    ↯ throw [$user === null] InvalidArgumentException (leaves placeOrder)
+    call :OrderService → Pricing: priceOf($item['sku'], $item['qty'])  ⊖
+      self Pricing → Pricing: unitPrice($sku)
+    ┌ alt [$total > 100 / $total === 0]
+    call :OrderService → :EmailNotifier: notify($user, 'big order')  ⊖
+      self :EmailNotifier → :EmailNotifier: channel()  ⊖ · impls: EmailNotifier → EmailNotifier
+        create :EmailNotifier → :MailChannel: constructor()
+      self :EmailNotifier → :EmailNotifier: format($message)
+      call :EmailNotifier → :MailChannel: send($user['email'], $this->format($message))  impls: MailChannel → MailChannel
+    call :OrderService → Order: empty()  ⊖
+      create Order → :Order: constructor(0, 0, '')
+    ↯ throw [$response->failed()] PaymentFailed (leaves charge)
+    ↯ return (leaves placeOrder)
+    call :OrderService → :StripeGateway: charge($userId, $total)  ⊖ · impls: StripeGateway → StripeGateway · I/O: http
+    ↯ branch [catch PaymentFailed] (leaves placeOrder)
+    create :OrderService → order:Order: constructor($userId, $total, $receipt)
+    ┌ loop [each $item of collect(…)]
+    call :OrderService → :OrderRepositoryContract: reserve($item['sku'])  impls: EloquentOrderRepository, InMemoryOrderRepository
+    call :OrderService → order:Order: withStatus($status)
+    call :OrderService → :OrderRepositoryContract: save($order->withStatus($status))  impls: EloquentOrderRepository, InMemoryOrderRepository
+  call :OrderController → order:Order: toArray()  ⊖
+    call order:Order → helpers: money_format($this->total)
+⚠ layer-violation: Layer violation: OrderService → OrderRepositoryContract
+── class diagram
+class OrderController «controller» [Presentation]: store
+class OrderService «service» [Application]: placeOrder
+class Pricing «static» [Domain]: priceOf, unitPrice
+class Order «static» [Domain]: empty, constructor, withStatus, toArray
+class OrderRepositoryContract «interface, repository, seam, port» [Infrastructure]: findUser, reserve, save
+class StripeGateway «seam, singleton» [Infrastructure]: charge
+class EmailNotifier: channel
+class MailChannel: constructor, send
+class helpers «module, static»: money_format
+class PaymentGateway «interface»: charge
+class Channel «interface»: send
+class BaseNotifier «abstract»: notify, format
+association OrderController → OrderService "orders"
+association OrderService → OrderRepositoryContract "repository" VIOLATION Application → Infrastructure: an inner layer depends on an outer layer
+association OrderService → PaymentGateway "payments"
+association OrderService → EmailNotifier "notifier"
+realization StripeGateway → PaymentGateway
+generalization EmailNotifier → BaseNotifier
+realization MailChannel → Channel
+dependency OrderService → Pricing
+dependency EmailNotifier → MailChannel "«create»"
+dependency EmailNotifier → Channel
+dependency OrderService → Order
+dependency OrderService → Order "«create»"
+dependency OrderController → Order
+dependency Order → helpers
+
+════ http GET /api/admin/stats/{day} (src/Http/Controllers/Admin/StatsController.php#StatsController.show)
+── opened
+participants: Pipeline «external» | :StatsController «controller» [Presentation]
+found · → Pipeline: through(api, auth)  ⊕
+found · → :StatsController: show()  ⊖
+── Overview
+participants: Pipeline «external» | :StatsController «controller» [Presentation]
+found · → Pipeline: through(api, auth)  ⊕
+found · → :StatsController: show()  ⊖
+── Expand all
+participants: Pipeline «external» | :StatsController «controller» [Presentation]
+found · → Pipeline: through(api, auth)  ⊕
+found · → :StatsController: show()  ⊖
+── class diagram
+class StatsController «controller» [Presentation]: show
+
+════ http GET /api/admin/refresh (src/Http/Controllers/Admin/StatsController.php#StatsController.refresh)
+── opened
+participants: Pipeline «external» | :StatsController «controller» [Presentation]
+found · → Pipeline: through(api)  ⊕
+found · → :StatsController: refresh()  ⊖
+── Overview
+participants: Pipeline «external» | :StatsController «controller» [Presentation]
+found · → Pipeline: through(api)  ⊕
+found · → :StatsController: refresh()  ⊖
+── Expand all
+participants: Pipeline «external» | :StatsController «controller» [Presentation]
+found · → Pipeline: through(api)  ⊕
+found · → :StatsController: refresh()  ⊖
+── class diagram
+class StatsController «controller» [Presentation]: refresh
+
+════ http POST /api/admin/refresh (src/Http/Controllers/Admin/StatsController.php#StatsController.refresh)
+── opened
+participants: Pipeline «external» | :StatsController «controller» [Presentation]
+found · → Pipeline: through(api)  ⊕
+found · → :StatsController: refresh()  ⊖
+── Overview
+participants: Pipeline «external» | :StatsController «controller» [Presentation]
+found · → Pipeline: through(api)  ⊕
+found · → :StatsController: refresh()  ⊖
+── Expand all
+participants: Pipeline «external» | :StatsController «controller» [Presentation]
+found · → Pipeline: through(api)  ⊕
+found · → :StatsController: refresh()  ⊖
+── class diagram
+class StatsController «controller» [Presentation]: refresh
+
+════ http GET /api/products (src/Http/Controllers/ProductController.php#ProductController.index)
+── opened
+participants: Pipeline «external» | :ProductController «controller» [Presentation]
+found · → Pipeline: through(api)  ⊕
+found · → :ProductController: index()  ⊖
+── Overview
+participants: Pipeline «external» | :ProductController «controller» [Presentation]
+found · → Pipeline: through(api)  ⊕
+found · → :ProductController: index()  ⊖
+── Expand all
+participants: Pipeline «external» | :ProductController «controller» [Presentation]
+found · → Pipeline: through(api)  ⊕
+found · → :ProductController: index()  ⊖
+── class diagram
+class ProductController «controller» [Presentation]: index
+
+════ http GET /api/products/{id} (src/Http/Controllers/ProductController.php#ProductController.show)
+── opened
+participants: Pipeline «external» | :ProductController «controller» [Presentation]
+found · → Pipeline: through(api)  ⊕
+found · → :ProductController: show()  ⊖
+── Overview
+participants: Pipeline «external» | :ProductController «controller» [Presentation]
+found · → Pipeline: through(api)  ⊕
+found · → :ProductController: show()  ⊖
+── Expand all
+participants: Pipeline «external» | :ProductController «controller» [Presentation]
+found · → Pipeline: through(api)  ⊕
+found · → :ProductController: show()  ⊖
+── class diagram
+class ProductController «controller» [Presentation]: show
+
+════ http POST /api/promo/v3/codes/{code}/apply (vendor/seqcall/promo/src/Http/CodesController.php#CodesController.apply)
+── opened
+participants: Pipeline «external» | :CodesController «controller» [Presentation]
+found · → Pipeline: through(api)  ⊕
+found · → :CodesController: apply()  ⊖
+── Overview
+participants: Pipeline «external» | :CodesController «controller» [Presentation]
+found · → Pipeline: through(api)  ⊕
+found · → :CodesController: apply()  ⊖
+── Expand all
+participants: Pipeline «external» | :CodesController «controller» [Presentation]
+found · → Pipeline: through(api)  ⊕
+found · → :CodesController: apply()  ⊖
+── class diagram
+class CodesController «controller» [Presentation]: apply
+
+════ http POST /api/refunds (src/Http/Controllers/RefundController.php#RefundController.store)
+── opened
+participants: Pipeline «external» | :RefundController «controller» [Presentation] | unknown «unknown»
+found · → Pipeline: through(api, RequireFeature, VerifySignature)  ⊕
+found · → :RefundController: store()  ⊖
+  call :RefundController → unknown: $request->input('order')  unresolved: Its declaration was not found: a library that is not installed (vendor/ — run composer install), a property or variable whose type is not declared (set from the container, `app()->make(…)`), or a dynamic call.
+── Overview
+participants: Pipeline «external» | :RefundController «controller» [Presentation] | unknown «unknown»
+found · → Pipeline: through(api, RequireFeature, VerifySignature)  ⊕
+found · → :RefundController: store()  ⊖
+  call :RefundController → unknown: $request->input('order')  unresolved: Its declaration was not found: a library that is not installed (vendor/ — run composer install), a property or variable whose type is not declared (set from the container, `app()->make(…)`), or a dynamic call.
+── Expand all
+participants: Pipeline «external» | :RefundController «controller» [Presentation] | unknown «unknown»
+found · → Pipeline: through(api, RequireFeature, VerifySignature)  ⊕
+found · → :RefundController: store()  ⊖
+  call :RefundController → unknown: $request->input('order')  unresolved: Its declaration was not found: a library that is not installed (vendor/ — run composer install), a property or variable whose type is not declared (set from the container, `app()->make(…)`), or a dynamic call.
+── class diagram
+class RefundController «controller» [Presentation]: store
+
+════ http POST /api/refunds/{id}/retry (src/Http/Controllers/RefundController.php#RefundController.retry)
+── opened
+participants: Pipeline «external» | :RefundController «controller» [Presentation]
+found · → Pipeline: through(api, throttle)  ⊕
+found · → :RefundController: retry()  ⊖
+── Overview
+participants: Pipeline «external» | :RefundController «controller» [Presentation]
+found · → Pipeline: through(api, throttle)  ⊕
+found · → :RefundController: retry()  ⊖
+── Expand all
+participants: Pipeline «external» | :RefundController «controller» [Presentation]
+found · → Pipeline: through(api, throttle)  ⊕
+found · → :RefundController: retry()  ⊖
+── class diagram
+class RefundController «controller» [Presentation]: retry
+
+════ http GET /api/refunds/{id} (src/Http/Controllers/RefundController.php#RefundController.show)
+── opened
+participants: Pipeline «external» | :RefundController «controller» [Presentation]
+found · → Pipeline: through(api, cache.headers)  ⊕
+found · → :RefundController: show()  ⊖
+── Overview
+participants: Pipeline «external» | :RefundController «controller» [Presentation]
+found · → Pipeline: through(api, cache.headers)  ⊕
+found · → :RefundController: show()  ⊖
+── Expand all
+participants: Pipeline «external» | :RefundController «controller» [Presentation]
+found · → Pipeline: through(api, cache.headers)  ⊕
+found · → :RefundController: show()  ⊖
+── class diagram
+class RefundController «controller» [Presentation]: show
+
+════ http POST /api/billing/webhook (vendor/seqcall/billing/src/Http/WebhookController.php#WebhookController.receive)
+── opened
+participants: Container «external» | :WebhookController «controller» [Presentation] | :BillingClient [Infrastructure]
+found · → Container: resolve(WebhookController::class)  ⊕
+found · → :WebhookController: receive()  ⊖
+  call :WebhookController → :BillingClient: invoice(0, 0)  ⊕ · I/O: http
+── Overview
+participants: Container «external» | :WebhookController «controller» [Presentation] | :BillingClient [Infrastructure]
+found · → Container: resolve(WebhookController::class)  ⊕
+found · → :WebhookController: receive()  ⊖
+  call :WebhookController → :BillingClient: invoice(0, 0)  ⊕ · I/O: http
+── Expand all
+participants: Container «external» | :WebhookController «controller» [Presentation] | :BillingClient [Infrastructure] | :Invoice «data»
+found · → Container: resolve(WebhookController::class)  ⊕
+found · → :WebhookController: receive()  ⊖
+  call :WebhookController → :BillingClient: invoice(0, 0)  ⊖ · I/O: http
+    create :BillingClient → :Invoice: constructor($userId, $amount)
+── class diagram
+class WebhookController «controller» [Presentation]: receive
+class BillingClient [Infrastructure]: invoice
+class Invoice «data»: constructor
+association WebhookController → BillingClient "billing"
+dependency BillingClient → Invoice "«create»"
+
+════ http GET /api/billing/status (vendor/seqcall/billing/src/Http/WebhookController.php#WebhookController.status)
+── opened
+participants: Container «external» | :WebhookController «controller» [Presentation]
+found · → Container: resolve(WebhookController::class)  ⊕
+found · → :WebhookController: status()  ⊖
+── Overview
+participants: Container «external» | :WebhookController «controller» [Presentation]
+found · → Container: resolve(WebhookController::class)  ⊕
+found · → :WebhookController: status()  ⊖
+── Expand all
+participants: Container «external» | :WebhookController «controller» [Presentation]
+found · → Container: resolve(WebhookController::class)  ⊕
+found · → :WebhookController: status()  ⊖
+── class diagram
+class WebhookController «controller» [Presentation]: status
+
+════ cli orders:expire (src/Console/Commands/ExpireOrders.php#ExpireOrders.handle)
+── opened
+participants: :ExpireOrders | :EloquentOrderRepository «repository, adapter» [Infrastructure]
+found · → :ExpireOrders: handle()  ⊖
+  ┌ loop [each $userId of [1, 2, 3]]
+  call :ExpireOrders → :EloquentOrderRepository: findUser($userId)  I/O: db
+⚠ io-in-loop: I/O in a loop: EloquentOrderRepository.findUser (DB)
+── Overview
+participants: :ExpireOrders | :EloquentOrderRepository «repository, adapter» [Infrastructure]
+found · → :ExpireOrders: handle()  ⊖
+  ┌ loop [each $userId of [1, 2, 3]]
+  call :ExpireOrders → :EloquentOrderRepository: findUser($userId)  I/O: db
+⚠ io-in-loop: I/O in a loop: EloquentOrderRepository.findUser (DB)
+── Expand all
+participants: :ExpireOrders | :EloquentOrderRepository «repository, adapter» [Infrastructure]
+found · → :ExpireOrders: handle()  ⊖
+  ┌ loop [each $userId of [1, 2, 3]]
+  call :ExpireOrders → :EloquentOrderRepository: findUser($userId)  I/O: db
+⚠ io-in-loop: I/O in a loop: EloquentOrderRepository.findUser (DB)
+── class diagram
+class ExpireOrders: handle
+class EloquentOrderRepository «repository, adapter» [Infrastructure] I/O: db: findUser
+dependency ExpireOrders → EloquentOrderRepository
+
+════ job SendReceipt.handle (src/Jobs/SendReceipt.php#SendReceipt.handle)
+── opened
+participants: :SendReceipt
+found · → :SendReceipt: handle()  ⊖
+── Overview
+participants: :SendReceipt
+found · → :SendReceipt: handle()  ⊖
+── Expand all
+participants: :SendReceipt
+found · → :SendReceipt: handle()  ⊖
+── class diagram
+class SendReceipt: handle
+
+════ handler LogPlacedOrder.handle (src/Listeners/LogPlacedOrder.php#LogPlacedOrder.handle)
+── opened
+participants: :LogPlacedOrder
+found · → :LogPlacedOrder: handle()  ⊖
+── Overview
+participants: :LogPlacedOrder
+found · → :LogPlacedOrder: handle()  ⊖
+── Expand all
+participants: :LogPlacedOrder
+found · → :LogPlacedOrder: handle()  ⊖
+── class diagram
+class LogPlacedOrder: handle
+
+════ test OrderServiceTest.test_places_an_order (tests/OrderServiceTest.php#OrderServiceTest.test_places_an_order)
+── opened
+participants: :OrderServiceTest «test» | :OrderService «service» [Application] | :InMemoryOrderRepository «repository» [Infrastructure]
+found · → :OrderServiceTest: test_places_an_order()  ⊖
+  call :OrderServiceTest → :OrderService: placeOrder(1, [['sku' => 'a', 'qty' => 1]])  ⊕ · I/O: http (below)
+  create :OrderServiceTest → :InMemoryOrderRepository: constructor()
+  call :OrderServiceTest → :InMemoryOrderRepository: findUser(1)
+── Overview
+participants: :OrderServiceTest «test» | :OrderService «service» [Application] | Pricing «static» [Domain] | Order «static» [Domain] | :Order [Domain] | :OrderRepositoryContract «interface, repository, seam, port» [Infrastructure] | :InMemoryOrderRepository «repository» [Infrastructure] | :StripeGateway «seam, singleton» [Infrastructure] | :EmailNotifier | :MailChannel
+found · → :OrderServiceTest: test_places_an_order()  ⊖
+  call :OrderServiceTest → :OrderService: placeOrder(1, [['sku' => 'a', 'qty' => 1]])  ⊖
+    call :OrderService → :OrderRepositoryContract: findUser($userId)  impls: EloquentOrderRepository, InMemoryOrderRepository
+    ┌ loop [each $item of $items]
+    ↯ throw [$user === null] InvalidArgumentException (leaves placeOrder)
+    call :OrderService → Pricing: priceOf($item['sku'], $item['qty'])  ⊕
+    ┌ alt [$total > 100 / $total === 0]
+    call :OrderService → :EmailNotifier: notify($user, 'big order')  ⊖
+      self :EmailNotifier → :EmailNotifier: channel()  ⊕ · impls: EmailNotifier → EmailNotifier
+      self :EmailNotifier → :EmailNotifier: format($message)
+      call :EmailNotifier → :MailChannel: send($user['email'], $this->format($message))  impls: MailChannel → MailChannel
+    call :OrderService → Order: empty()  ⊕
+    ↯ return (leaves placeOrder)
+    call :OrderService → :StripeGateway: charge($userId, $total)  ⊕ · impls: StripeGateway → StripeGateway · I/O: http
+    ↯ branch [catch PaymentFailed] (leaves placeOrder)
+    create :OrderService → :Order: constructor($userId, $total, $receipt)
+    ┌ loop [each $item of collect(…)]
+    call :OrderService → :OrderRepositoryContract: reserve($item['sku'])  impls: EloquentOrderRepository, InMemoryOrderRepository
+    call :OrderService → :Order: withStatus($status)
+    call :OrderService → :OrderRepositoryContract: save($order->withStatus($status))  impls: EloquentOrderRepository, InMemoryOrderRepository
+  create :OrderServiceTest → :InMemoryOrderRepository: constructor()
+  call :OrderServiceTest → :InMemoryOrderRepository: findUser(1)
+⚠ layer-violation: Layer violation: OrderService → OrderRepositoryContract
+── Expand all
+participants: :OrderServiceTest «test» | :OrderService «service» [Application] | Pricing «static» [Domain] | Order «static» [Domain] | :Order [Domain] | order:Order [Domain] | :OrderRepositoryContract «interface, repository, seam, port» [Infrastructure] | :InMemoryOrderRepository «repository» [Infrastructure] | :StripeGateway «seam, singleton» [Infrastructure] | :EmailNotifier | :MailChannel | :MailChannel
+found · → :OrderServiceTest: test_places_an_order()  ⊖
+  call :OrderServiceTest → :OrderService: placeOrder(1, [['sku' => 'a', 'qty' => 1]])  ⊖
+    call :OrderService → :OrderRepositoryContract: findUser($userId)  impls: EloquentOrderRepository, InMemoryOrderRepository
+    ┌ loop [each $item of $items]
+    ↯ throw [$user === null] InvalidArgumentException (leaves placeOrder)
+    call :OrderService → Pricing: priceOf($item['sku'], $item['qty'])  ⊖
+      self Pricing → Pricing: unitPrice($sku)
+    ┌ alt [$total > 100 / $total === 0]
+    call :OrderService → :EmailNotifier: notify($user, 'big order')  ⊖
+      self :EmailNotifier → :EmailNotifier: channel()  ⊖ · impls: EmailNotifier → EmailNotifier
+        create :EmailNotifier → :MailChannel: constructor()
+      self :EmailNotifier → :EmailNotifier: format($message)
+      call :EmailNotifier → :MailChannel: send($user['email'], $this->format($message))  impls: MailChannel → MailChannel
+    call :OrderService → Order: empty()  ⊖
+      create Order → :Order: constructor(0, 0, '')
+    ↯ throw [$response->failed()] PaymentFailed (leaves charge)
+    ↯ return (leaves placeOrder)
+    call :OrderService → :StripeGateway: charge($userId, $total)  ⊖ · impls: StripeGateway → StripeGateway · I/O: http
+    ↯ branch [catch PaymentFailed] (leaves placeOrder)
+    create :OrderService → order:Order: constructor($userId, $total, $receipt)
+    ┌ loop [each $item of collect(…)]
+    call :OrderService → :OrderRepositoryContract: reserve($item['sku'])  impls: EloquentOrderRepository, InMemoryOrderRepository
+    call :OrderService → order:Order: withStatus($status)
+    call :OrderService → :OrderRepositoryContract: save($order->withStatus($status))  impls: EloquentOrderRepository, InMemoryOrderRepository
+  create :OrderServiceTest → :InMemoryOrderRepository: constructor()
+  call :OrderServiceTest → :InMemoryOrderRepository: findUser(1)
+⚠ layer-violation: Layer violation: OrderService → OrderRepositoryContract
+── class diagram
+class OrderServiceTest «test»: test_places_an_order
+class OrderService «service» [Application]: placeOrder
+class Pricing «static» [Domain]: priceOf, unitPrice
+class Order «static» [Domain]: empty, constructor, withStatus
+class OrderRepositoryContract «interface, repository, seam, port» [Infrastructure]: findUser, reserve, save
+class InMemoryOrderRepository «repository» [Infrastructure]: constructor, findUser
+class StripeGateway «seam, singleton» [Infrastructure]: charge
+class EmailNotifier: channel
+class MailChannel: constructor, send
+class PaymentGateway «interface»: charge
+class Channel «interface»: send
+class BaseNotifier «abstract»: notify, format
+association OrderService → OrderRepositoryContract "repository" VIOLATION Application → Infrastructure: an inner layer depends on an outer layer
+association OrderService → PaymentGateway "payments"
+association OrderService → EmailNotifier "notifier"
+realization InMemoryOrderRepository → OrderRepositoryContract
+realization StripeGateway → PaymentGateway
+generalization EmailNotifier → BaseNotifier
+realization MailChannel → Channel
+dependency OrderServiceTest → OrderService
+dependency OrderService → Pricing
+dependency EmailNotifier → MailChannel "«create»"
+dependency EmailNotifier → Channel
+dependency OrderService → Order
+dependency OrderService → Order "«create»"
+dependency OrderServiceTest → InMemoryOrderRepository "«create»"
+dependency OrderServiceTest → InMemoryOrderRepository
+
+════ test OrderServiceTest.it_rejects_unknown_users (tests/OrderServiceTest.php#OrderServiceTest.it_rejects_unknown_users)
+── opened
+participants: :OrderServiceTest «test»
+found · → :OrderServiceTest: it_rejects_unknown_users()  ⊖
+── Overview
+participants: :OrderServiceTest «test»
+found · → :OrderServiceTest: it_rejects_unknown_users()  ⊖
+── Expand all
+participants: :OrderServiceTest «test»
+found · → :OrderServiceTest: it_rejects_unknown_users()  ⊖
+── class diagram
+class OrderServiceTest «test»: it_rejects_unknown_users

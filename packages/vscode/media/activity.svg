@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Seqcall activity bar icon: two lifelines, a call and its answer (monochrome, VS Code tints it) -->
+  <line x1="6" y1="3" x2="6" y2="21"/>
+  <line x1="18" y1="3" x2="18" y2="21"/>
+  <path d="M6 8 H16"/>
+  <path d="M13.5 5.5 L16.5 8 L13.5 10.5"/>
+  <path d="M18 15 H8" stroke-dasharray="2 2"/>
+  <path d="M10.5 12.5 L7.5 15 L10.5 17.5"/>
+</svg>

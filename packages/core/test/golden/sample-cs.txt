@@ -1,0 +1,338 @@
+════ http GET /api/reports/shapes (src/Sample.Web/Controllers/ReportsController.cs#ReportsController.Shapes())
+── opened
+participants: ServiceProvider «external» | :ReportsController «controller» [Presentation] | :Circle [Domain] | :Square [Domain] | :Shape «abstract, seam» [Domain]
+found · → ServiceProvider: GetRequiredService(typeof(ReportsController))  ⊕
+found · → :ReportsController: Shapes()  ⊖
+  create :ReportsController → :Circle: constructor(1)
+  create :ReportsController → :Square: constructor(2)
+  ┌ loop [each s in shapes]
+  call :ReportsController → :Shape: Describe()  ⊕
+── Overview
+participants: ServiceProvider «external» | :ReportsController «controller» [Presentation] | :Circle [Domain] | :Square [Domain] | :Shape «abstract, seam» [Domain]
+found · → ServiceProvider: GetRequiredService(typeof(ReportsController))  ⊕
+found · → :ReportsController: Shapes()  ⊖
+  create :ReportsController → :Circle: constructor(1)
+  create :ReportsController → :Square: constructor(2)
+  ┌ loop [each s in shapes]
+  call :ReportsController → :Shape: Describe()  ⊕
+── Expand all
+participants: ServiceProvider «external» | :ReportsController «controller» [Presentation] | :Circle [Domain] | :Square [Domain] | :Shape «abstract, seam» [Domain]
+found · → ServiceProvider: GetRequiredService(typeof(ReportsController))  ⊕
+found · → :ReportsController: Shapes()  ⊖
+  create :ReportsController → :Circle: constructor(1)
+  create :ReportsController → :Square: constructor(2)
+  ┌ loop [each s in shapes]
+  call :ReportsController → :Shape: Describe()  ⊖
+    self :Shape → :Shape: Area()  impls: Circle, Square
+── class diagram
+class ReportsController «controller» [Presentation]: Shapes
+class Circle [Domain]: constructor
+class Square [Domain]: constructor
+class Shape «abstract, seam» [Domain]: Describe, Area
+generalization Circle → Shape
+generalization Square → Shape
+dependency ReportsController → Circle "«create»"
+dependency ReportsController → Square "«create»"
+dependency ReportsController → Shape
+
+════ http GET /api/reports/{userId} (src/Sample.Web/Controllers/ReportsController.cs#ReportsController.Get(string))
+── opened
+participants: ServiceProvider «external» | :ReportsController «controller» [Presentation] | :ReportService «service» [Application]
+found · → ServiceProvider: GetRequiredService(typeof(ReportsController))  ⊕
+found · → :ReportsController: Get()  ⊖
+  call :ReportsController → :ReportService: BuildAsync(userId)  async · ⊕
+── Overview
+participants: ServiceProvider «external» | :ReportsController «controller» [Presentation] | :ReportService «service» [Application] | :UserService «service» [Application] | Format «static» [Application] | :Order [Domain] | :InMemoryStore<T> «seam» [Infrastructure]
+found · → ServiceProvider: GetRequiredService(typeof(ReportsController))  ⊕
+found · → :ReportsController: Get()  ⊖
+  call :ReportsController → :ReportService: BuildAsync(userId)  async · ⊖
+    call :ReportService → :UserService: GetUserDtoAsync(userId)  async · ⊕
+    self :ReportService → :ReportService: Header(dto)  ⊕
+    self :ReportService → :ReportService: Lines()  ⊖
+      call :ReportService → :InMemoryStore<T>: Get(0)  impls: InMemoryStore<T> → InMemoryStore<T>
+      ┌ opt [!(first is null)]
+      call :ReportService → :Order: WithVat()
+      call :ReportService → Format: Money(first.WithVat())
+── Expand all
+participants: ServiceProvider «external» | :ReportsController «controller» [Presentation] | :ReportService «service» [Application] | :UserService «service» [Application] | Format «static» [Application] | StringExtensions «static» [Application] | :UserDto «data» [Domain] | :Order [Domain] | :SqlUserRepository «repository, seam, singleton» [Infrastructure] | Logger «static» [Infrastructure] | :InMemoryStore<T> «seam» [Infrastructure]
+found · → ServiceProvider: GetRequiredService(typeof(ReportsController))  ⊕
+found · → :ReportsController: Get()  ⊖
+  call :ReportsController → :ReportService: BuildAsync(userId)  async · ⊖
+    call :ReportService → :UserService: GetUserDtoAsync(userId)  async · ⊖
+      self :UserService → :UserService: FindUserAsync(id)  async · ⊖
+        call :UserService → :SqlUserRepository: FindByIdAsync(id)  async · ⊖ · impls: InMemoryUserRepository, SqlUserRepository → SqlUserRepository
+          call :SqlUserRepository → Logger: Info($"SELECT * FROM users WHERE id = {id} ({_connectionString})")
+        ↯ return [cached is not null] (leaves FindUserAsync)
+        call :UserService → :SqlUserRepository: FindByIdAsync(id)  async · ⊖ · impls: InMemoryUserRepository, SqlUserRepository → SqlUserRepository
+          call :SqlUserRepository → Logger: Info($"SELECT * FROM users WHERE id = {id} ({_connectionString})")
+      call :UserService → Format: Title(user.Name)
+      call :UserService → StringExtensions: Slugify()
+      create :UserService → :UserDto: constructor(user.Id, Format.Title(user.Name), user.Name.Slugify())
+    self :ReportService → :ReportService: Header(dto)  ⊖
+      call :ReportService → Format: Title(dto.DisplayName)
+    self :ReportService → :ReportService: Lines()  ⊖
+      call :ReportService → :InMemoryStore<T>: Get(0)  impls: InMemoryStore<T> → InMemoryStore<T>
+      ┌ opt [!(first is null)]
+      call :ReportService → :Order: WithVat()
+      call :ReportService → Format: Money(first.WithVat())
+── class diagram
+class ReportsController «controller» [Presentation]: Get
+class ReportService «service» [Application]: BuildAsync, Header, Lines
+class UserService «service» [Application]: GetUserDtoAsync, FindUserAsync
+class Format «static» [Application]: Title, Money
+class StringExtensions «static» [Application]: Slugify
+class UserDto «data» [Domain]: constructor
+class Order [Domain]: WithVat
+class SqlUserRepository «repository, seam, singleton» [Infrastructure]: FindByIdAsync
+class Logger «static» [Infrastructure]: Info
+class InMemoryStore<T> «seam» [Infrastructure]: Get
+class IUserRepository «interface, repository» [Application]: FindByIdAsync
+class IStore<T> «interface» [Application]: Get
+association ReportsController → ReportService "reports"
+association ReportService → UserService "_users"
+association ReportService → IStore<T> "_orders"
+association UserService → IUserRepository "_primary"
+association UserService → IUserRepository "_replica"
+realization SqlUserRepository → IUserRepository
+realization InMemoryStore<T> → IStore<T>
+dependency SqlUserRepository → Logger
+dependency UserService → Format
+dependency UserService → StringExtensions
+dependency UserService → UserDto "«create»"
+dependency ReportService → Format
+dependency ReportService → Order
+
+════ http GET /api/users/{id} (src/Sample.Web/Controllers/UsersController.cs#UsersController.Get(string))
+── opened
+participants: ServiceProvider «external» | :UsersController «controller» [Presentation] | :UserService «service» [Application]
+found · → ServiceProvider: GetRequiredService(typeof(UsersController))  ⊕
+found · → :UsersController: Get()  ⊖
+  call :UsersController → :UserService: GetUserDtoAsync(id)  async · ⊕
+── Overview
+participants: ServiceProvider «external» | :UsersController «controller» [Presentation] | :UserService «service» [Application]
+found · → ServiceProvider: GetRequiredService(typeof(UsersController))  ⊕
+found · → :UsersController: Get()  ⊖
+  call :UsersController → :UserService: GetUserDtoAsync(id)  async · ⊕
+── Expand all
+participants: ServiceProvider «external» | :UsersController «controller» [Presentation] | :UserService «service» [Application] | Format «static» [Application] | StringExtensions «static» [Application] | :UserDto «data» [Domain] | :SqlUserRepository «repository, seam, singleton» [Infrastructure] | Logger «static» [Infrastructure]
+found · → ServiceProvider: GetRequiredService(typeof(UsersController))  ⊕
+found · → :UsersController: Get()  ⊖
+  call :UsersController → :UserService: GetUserDtoAsync(id)  async · ⊖
+    self :UserService → :UserService: FindUserAsync(id)  async · ⊖
+      call :UserService → :SqlUserRepository: FindByIdAsync(id)  async · ⊖ · impls: InMemoryUserRepository, SqlUserRepository → SqlUserRepository
+        call :SqlUserRepository → Logger: Info($"SELECT * FROM users WHERE id = {id} ({_connectionString})")
+      ↯ return [cached is not null] (leaves FindUserAsync)
+      call :UserService → :SqlUserRepository: FindByIdAsync(id)  async · ⊖ · impls: InMemoryUserRepository, SqlUserRepository → SqlUserRepository
+        call :SqlUserRepository → Logger: Info($"SELECT * FROM users WHERE id = {id} ({_connectionString})")
+    call :UserService → Format: Title(user.Name)
+    call :UserService → StringExtensions: Slugify()
+    create :UserService → :UserDto: constructor(user.Id, Format.Title(user.Name), user.Name.Slugify())
+── class diagram
+class UsersController «controller» [Presentation]: Get
+class UserService «service» [Application]: GetUserDtoAsync, FindUserAsync
+class Format «static» [Application]: Title
+class StringExtensions «static» [Application]: Slugify
+class UserDto «data» [Domain]: constructor
+class SqlUserRepository «repository, seam, singleton» [Infrastructure]: FindByIdAsync
+class Logger «static» [Infrastructure]: Info
+class IUserRepository «interface, repository» [Application]: FindByIdAsync
+association UsersController → UserService "_users"
+association UserService → IUserRepository "_primary"
+association UserService → IUserRepository "_replica"
+realization SqlUserRepository → IUserRepository
+dependency SqlUserRepository → Logger
+dependency UserService → Format
+dependency UserService → StringExtensions
+dependency UserService → UserDto "«create»"
+
+════ http GET /health (src/Sample.Web/Endpoints/HealthEndpoints.cs#HealthEndpoints.Check())
+── opened
+participants: HealthEndpoints «static» [Presentation]
+found · → HealthEndpoints: Check()  ⊖
+── Overview
+participants: HealthEndpoints «static» [Presentation]
+found · → HealthEndpoints: Check()  ⊖
+── Expand all
+participants: HealthEndpoints «static» [Presentation]
+found · → HealthEndpoints: Check()  ⊖
+── class diagram
+class HealthEndpoints «static» [Presentation]: Check
+
+════ http GET /v1.3|1.4/Providers (src/Sample.Web/Controllers/ProvidersController.cs#ProvidersController.List())
+── opened
+participants: :ProvidersController «controller» [Presentation]
+found · → :ProvidersController: List()  ⊖
+── Overview
+participants: :ProvidersController «controller» [Presentation]
+found · → :ProvidersController: List()  ⊖
+── Expand all
+participants: :ProvidersController «controller» [Presentation]
+found · → :ProvidersController: List()  ⊖
+── class diagram
+class ProvidersController «controller» [Presentation]: List
+
+════ http GET /v1.3|1.4|1.6/Providers/{providerId:long}/vendors (src/Sample.Web/Controllers/ProvidersController.cs#ProvidersController.Vendors(long))
+── opened
+participants: :ProvidersController «controller» [Presentation]
+found · → :ProvidersController: Vendors()  ⊖
+── Overview
+participants: :ProvidersController «controller» [Presentation]
+found · → :ProvidersController: Vendors()  ⊖
+── Expand all
+participants: :ProvidersController «controller» [Presentation]
+found · → :ProvidersController: Vendors()  ⊖
+── class diagram
+class ProvidersController «controller» [Presentation]: Vendors
+
+════ http GET /v1.6/Providers (src/Sample.Web/Controllers/ProvidersController.cs#ProvidersController.ListV16())
+── opened
+participants: :ProvidersController «controller» [Presentation]
+found · → :ProvidersController: ListV16()  ⊖
+── Overview
+participants: :ProvidersController «controller» [Presentation]
+found · → :ProvidersController: ListV16()  ⊖
+── Expand all
+participants: :ProvidersController «controller» [Presentation]
+found · → :ProvidersController: ListV16()  ⊖
+── class diagram
+class ProvidersController «controller» [Presentation]: ListV16
+
+════ http GET /v1.7-beta|2025-01-15/Providers/beta (src/Sample.Web/Controllers/ProvidersController.cs#ProvidersController.Beta())
+── opened
+participants: :ProvidersController «controller» [Presentation]
+found · → :ProvidersController: Beta()  ⊖
+── Overview
+participants: :ProvidersController «controller» [Presentation]
+found · → :ProvidersController: Beta()  ⊖
+── Expand all
+participants: :ProvidersController «controller» [Presentation]
+found · → :ProvidersController: Beta()  ⊖
+── class diagram
+class ProvidersController «controller» [Presentation]: Beta
+
+════ http POST /api/users/{id}/charge (src/Sample.Web/Controllers/UsersController.cs#UsersController.Charge(string, decimal))
+── opened
+participants: ServiceProvider «external» | :UsersController «controller» [Presentation] | :BillingService «service» [Application]
+found · → ServiceProvider: GetRequiredService(typeof(UsersController))  ⊕
+found · → :UsersController: Charge()  ⊖
+  call :UsersController → :BillingService: ChargeAsync(id, amount)  async · ⊕
+── Overview
+participants: ServiceProvider «external» | :UsersController «controller» [Presentation] | :BillingService «service» [Application] | :UserService «service» [Application] | :Order [Domain] | :SqlUserRepository «repository, seam, singleton» [Infrastructure] | :PaymentApiClient «seam, adapter» [Infrastructure]
+found · → ServiceProvider: GetRequiredService(typeof(UsersController))  ⊕
+found · → :UsersController: Charge()  ⊖
+  call :UsersController → :BillingService: ChargeAsync(id, amount)  async · ⊖
+    call :BillingService → :UserService: FindUserAsync(userId)  async · ⊖
+      call :UserService → :SqlUserRepository: FindByIdAsync(id)  async · ⊕ · impls: InMemoryUserRepository, SqlUserRepository → SqlUserRepository
+      ↯ return [cached is not null] (leaves FindUserAsync)
+      call :UserService → :SqlUserRepository: FindByIdAsync(id)  async · ⊕ · impls: InMemoryUserRepository, SqlUserRepository → SqlUserRepository
+    create :BillingService → :Order: constructor(Guid.NewGuid().ToString(), user.Id, amount)
+    call :BillingService → :PaymentApiClient: ChargeAsync(order)  async · ⊕ · impls: PaymentApiClient → PaymentApiClient · I/O: http
+── Expand all
+participants: ServiceProvider «external» | :UsersController «controller» [Presentation] | :BillingService «service» [Application] | :UserService «service» [Application] | :Order [Domain] | :SqlUserRepository «repository, seam, singleton» [Infrastructure] | Logger «static» [Infrastructure] | :PaymentApiClient «seam, adapter» [Infrastructure]
+found · → ServiceProvider: GetRequiredService(typeof(UsersController))  ⊕
+found · → :UsersController: Charge()  ⊖
+  call :UsersController → :BillingService: ChargeAsync(id, amount)  async · ⊖
+    call :BillingService → :UserService: FindUserAsync(userId)  async · ⊖
+      call :UserService → :SqlUserRepository: FindByIdAsync(id)  async · ⊖ · impls: InMemoryUserRepository, SqlUserRepository → SqlUserRepository
+        call :SqlUserRepository → Logger: Info($"SELECT * FROM users WHERE id = {id} ({_connectionString})")
+      ↯ return [cached is not null] (leaves FindUserAsync)
+      call :UserService → :SqlUserRepository: FindByIdAsync(id)  async · ⊖ · impls: InMemoryUserRepository, SqlUserRepository → SqlUserRepository
+        call :SqlUserRepository → Logger: Info($"SELECT * FROM users WHERE id = {id} ({_connectionString})")
+    create :BillingService → :Order: constructor(Guid.NewGuid().ToString(), user.Id, amount)
+    call :BillingService → :PaymentApiClient: ChargeAsync(order)  async · ⊖ · impls: PaymentApiClient → PaymentApiClient · I/O: http
+      call :PaymentApiClient → Logger: Info($"charging {order.Id}")
+── class diagram
+class UsersController «controller» [Presentation]: Charge
+class BillingService «service» [Application]: ChargeAsync
+class UserService «service» [Application]: FindUserAsync
+class Order [Domain]: constructor
+class SqlUserRepository «repository, seam, singleton» [Infrastructure]: FindByIdAsync
+class Logger «static» [Infrastructure]: Info
+class PaymentApiClient «seam, adapter» [Infrastructure] I/O: http: ChargeAsync
+class IUserRepository «interface, repository» [Application]: FindByIdAsync
+class IPaymentClient «interface, port» [Application]: ChargeAsync
+association UsersController → UserService "_users"
+association UsersController → BillingService "_billing"
+association BillingService → IPaymentClient "payments"
+association BillingService → UserService "users"
+association UserService → IUserRepository "_primary"
+association UserService → IUserRepository "_replica"
+realization SqlUserRepository → IUserRepository
+realization PaymentApiClient → IPaymentClient
+dependency SqlUserRepository → Logger
+dependency BillingService → Order "«create»"
+dependency PaymentApiClient → Logger
+
+════ http POST /ping (src/Sample.Web/Endpoints/HealthEndpoints.cs#HealthEndpoints.Map(WebApplication))
+── opened
+participants: HealthEndpoints «static» [Presentation]
+found · → HealthEndpoints: Map()  ⊖
+── Overview
+participants: HealthEndpoints «static» [Presentation]
+found · → HealthEndpoints: Map()  ⊖
+── Expand all
+participants: HealthEndpoints «static» [Presentation]
+found · → HealthEndpoints: Map()  ⊖
+── class diagram
+class HealthEndpoints «static» [Presentation]: Map
+
+════ cli Sample.Batch/Program.cs (top-level statements) (src/Sample.Batch/Program.cs#Program.<Main>$(string[]))
+── opened
+participants: Program «static» [Presentation] | :UserService «service» [Application]
+found · → Program: Main()  ⊖
+  call Program → :UserService: FindUserAsync("1")  async · ⊕
+── Overview
+participants: Program «static» [Presentation] | :UserService «service» [Application] | _replica:IUserRepository «interface, repository, seam» [Application] | _primary:IUserRepository «interface, repository, seam» [Application]
+found · → Program: Main()  ⊖
+  call Program → :UserService: FindUserAsync("1")  async · ⊖
+    call :UserService → _replica:IUserRepository: FindByIdAsync(id)  async · impls: InMemoryUserRepository, SqlUserRepository
+    ↯ return [cached is not null] (leaves FindUserAsync)
+    call :UserService → _primary:IUserRepository: FindByIdAsync(id)  async · impls: InMemoryUserRepository, SqlUserRepository
+── Expand all
+participants: Program «static» [Presentation] | :UserService «service» [Application] | _replica:IUserRepository «interface, repository, seam» [Application] | _primary:IUserRepository «interface, repository, seam» [Application]
+found · → Program: Main()  ⊖
+  call Program → :UserService: FindUserAsync("1")  async · ⊖
+    call :UserService → _replica:IUserRepository: FindByIdAsync(id)  async · impls: InMemoryUserRepository, SqlUserRepository
+    ↯ return [cached is not null] (leaves FindUserAsync)
+    call :UserService → _primary:IUserRepository: FindByIdAsync(id)  async · impls: InMemoryUserRepository, SqlUserRepository
+── class diagram
+class Program «static» [Presentation]: Main
+class UserService «service» [Application]: FindUserAsync
+class IUserRepository «interface, repository, seam» [Application]: FindByIdAsync
+association UserService → IUserRepository "_primary"
+association UserService → IUserRepository "_replica"
+dependency Program → UserService
+
+════ cli Sample.Web/Program.cs (top-level statements) (src/Sample.Web/Program.cs#Program.<Main>$(string[]))
+── opened
+participants: Program «static» [Presentation] | :InMemoryStore<T> [Infrastructure]
+found · → Program: Main()  ⊖
+  ┌ callback [builder.Services.AddSingleton]
+  create Program → :InMemoryStore<T>: constructor()
+── Overview
+participants: Program «static» [Presentation] | :InMemoryStore<T> [Infrastructure]
+found · → Program: Main()  ⊖
+  ┌ callback [builder.Services.AddSingleton]
+  create Program → :InMemoryStore<T>: constructor()
+── Expand all
+participants: Program «static» [Presentation] | :InMemoryStore<T> [Infrastructure]
+found · → Program: Main()  ⊖
+  ┌ callback [builder.Services.AddSingleton]
+  create Program → :InMemoryStore<T>: constructor()
+── class diagram
+class Program «static» [Presentation]: Main
+class InMemoryStore<T> [Infrastructure]: constructor
+dependency Program → InMemoryStore<T> "«create»"
+
+════ job CleanupWorker.ExecuteAsync (src/Sample.Web/Workers/CleanupWorker.cs#CleanupWorker.ExecuteAsync(CancellationToken))
+── opened
+participants: :CleanupWorker [Presentation]
+found · → :CleanupWorker: ExecuteAsync()  ⊖
+── Overview
+participants: :CleanupWorker [Presentation]
+found · → :CleanupWorker: ExecuteAsync()  ⊖
+── Expand all
+participants: :CleanupWorker [Presentation]
+found · → :CleanupWorker: ExecuteAsync()  ⊖
+── class diagram
+class CleanupWorker [Presentation]: ExecuteAsync

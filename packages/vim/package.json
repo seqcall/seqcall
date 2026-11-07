@@ -1,0 +1,10 @@
+{
+  "name": "@seqcall/vim",
+  "version": "0.1.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "description": "Seqcall for Vim 9: the Node sidecar in browser mode, diagrams in a browser tab.",
+  "scripts": {
+    "build": "node build.mjs"
+  }
+}

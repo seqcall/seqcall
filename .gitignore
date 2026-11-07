@@ -1,0 +1,28 @@
+node_modules/
+dist/
+out/
+.vscode-test/
+*.vsix
+.vsix-stage/
+bin/
+obj/
+.gradle/
+.intellijPlatform
+packages/rider/build/
+.kotlin/
+fixtures/*/.idea/
+release/
+# coverage reports (npm run coverage, npm run coverage:cs)
+coverage/
+# SonarQube scanner work folders (.github/workflows/sonar.yml)
+.scannerwork/
+.sonarqube/
+# Local list of real repositories for smoke tests (per developer, see AGENTS.md)
+smoke-tests-repos.md
+# Per developer, never in git: working notes with measurements on real code (private/STATUS.md …), personal agent notes
+private/
+CLAUDE.local.md
+# Quality baseline (npm run baseline): numbers on the developer's own repositories, the release worktree
+.baseline/
+# Leak check (scripts/leak-check.mjs): the forbidden words and the real repositories to compare with, per developer
+.leak-check.json

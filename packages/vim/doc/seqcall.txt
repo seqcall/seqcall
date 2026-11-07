@@ -1,0 +1,82 @@
+*seqcall.txt*	Interactive sequence and class diagrams from code
+
+Seqcall draws the sequence diagram of the method at the cursor and a live
+class diagram of the classes in it. Vim cannot show the diagrams itself: they
+open in a browser tab served by the Seqcall sidecar (on 127.0.0.1, behind a
+random token). Clicking a diagram element jumps to its code in Vim.
+
+Languages: TypeScript/JavaScript, C# (needs the .NET runtime) and PHP.
+Requirements: Vim 9.0.1485 or newer, or Neovim 0.10 or newer; Node.js 20 or
+newer.
+
+==============================================================================
+COMMANDS						*seqcall-commands*
+
+:SeqcallShow		Draw the sequence diagram of the method at the cursor.
+			The first call starts the sidecar and opens the page;
+			later calls update the open page.	*:SeqcallShow*
+:SeqcallOpen		Open the sequence page (again). Before any diagram	*:SeqcallOpen*
+			it starts the sidecar; the page offers the entry
+			points, design issues, review and map.
+:SeqcallEntryPoints	Show where flows start (routes, commands, jobs,	*:SeqcallEntryPoints*
+			tests) in the sequence page; no file needed.
+:SeqcallClass		Open the class diagram page.		*:SeqcallClass*
+:SeqcallInfo		What Seqcall knows about the call or the method	*:SeqcallInfo*
+			name at the cursor, in a popup there: on a call
+			which implementation runs (the DI container's
+			choice, the only one, or the candidates) and its
+			I/O; on a method name the entry points that reach
+			it (numbered), the tests among its callers, its I/O.
+			The popup closes when the cursor moves.
+:SeqcallReach [n]	Open the flow of entry point n from the last	*:SeqcallReach*
+			|:SeqcallInfo|, expanded down to the method, in
+			the page. Without n: a list of all of them, the
+			last row "Show all in Paths to here".
+:SeqcallMemory	The memory Seqcall uses: its own process (exact),	*:SeqcallMemory*
+			and the C# analysis of each loaded project. One
+			line each in |:SeqcallLog|.
+:SeqcallFreeMemory	Drop Seqcall's caches and stop the C# analysis;	*:SeqcallFreeMemory*
+			it loads again with the next diagram.
+:SeqcallLog		Show the plugin's log in a scratch window. *:SeqcallLog*
+:SeqcallStop		Stop the sidecar.			*:SeqcallStop*
+:SeqcallUpdate	Install the latest release from GitHub in place of	*:SeqcallUpdate*
+			this plugin folder; restart the editor to use it.
+			Only for an unpacked release archive, not a git
+			checkout.
+
+Mappings (none by default): >
+	nmap <Leader>cs <Plug>(seqcall-show)
+	nmap <Leader>ci <Plug>(seqcall-info)
+<
+Saving a file refreshes the diagram; moving the cursor onto a call that is
+in the diagram highlights it. Diagrams are drawn from the files on disk, so
+unsaved changes are not shown until you save.
+
+==============================================================================
+SETTINGS						*seqcall-settings*
+
+g:seqcall_node	Node.js binary. Default: $SEQCALL_NODE, `node` on PATH,
+			then the newest nvm installation (version 20+).
+g:seqcall_browser	Browser command, a string or a list; the URL is
+			appended. Default: `xdg-open` (`open` on macOS).
+g:Seqcall_browser	A Funcref called with the URL instead.
+g:seqcall_follow_cursor  Highlight the call at the cursor (default true).
+g:seqcall_port	Fixed port for the pages (default: any free port).
+g:seqcall_sidecar	Path of stdio-host.cjs (default: the plugin's own).
+g:seqcall_csharp_sidecar  Path of Seqcall.CSharp.dll (default: the plugin's).
+g:seqcall_dotnet	`dotnet` for C# (default: PATH, $SEQCALL_DOTNET, then
+			~/.dotnet/dotnet).
+
+Neovim: the same variables work; alternatively, from Lua: >
+	require('seqcall').setup({
+	  node = '/path/to/node',
+	  browser = function(url) vim.ui.open(url) end,
+	})
+<
+:checkhealth seqcall shows the Node, sidecar, C# sidecar and dotnet that
+would be used.
+
+The project root is found from the file (nearest tsconfig.json/jsconfig.json,
+.sln/.csproj or composer.json) inside Vim's current directory.
+
+ vim:tw=78:ts=8:noet:ft=help:norl:

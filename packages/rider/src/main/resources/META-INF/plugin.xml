@@ -1,0 +1,78 @@
+<idea-plugin>
+    <id>dev.seqcall</id>
+    <name>Seqcall</name>
+    <vendor>Seqcall</vendor>
+    <description><![CDATA[
+      <p><b>See how your code behaves.</b> Seqcall draws an interactive sequence diagram of the method at
+      the caret, together with a live class diagram of the classes taking part. Open the calls that matter
+      and click any element to jump to the code.</p>
+      <p>Works with <b>TypeScript / JavaScript</b>, <b>C#</b> and <b>PHP</b> (Laravel and plain PHP 8).</p>
+
+      <h3>Getting started</h3>
+      <ol>
+        <li>Put the caret inside a function or method.</li>
+        <li>Press <b>Ctrl+Alt+Shift+K</b>, or right-click and choose <b>Show Sequence Diagram</b>.</li>
+        <li>The diagram opens in the <b>Seqcall</b> tool window; <b>Tools | Show Class Diagram</b> opens the class diagram.</li>
+      </ol>
+      <p>Or start from the <b>⌂ Entry points</b> button: routes, <code>main</code>, jobs and tests.</p>
+
+      <h3>What you can do</h3>
+      <ul>
+        <li><b>Expand step by step</b>: ⊕ / ⊖ on a call; <b>✦ Overview</b> opens the important calls for you; <b>↯</b> folds the error handling.</li>
+        <li><b>Jump to the code</b>: click a message, participant or frame.</li>
+        <li><b>See conditions and loops</b>: <code>alt</code>, <code>opt</code>, <code>loop</code> and <code>try</code> frames.</li>
+        <li><b>Spot I/O</b>: badges mark calls that reach a database, the network or the disk.</li>
+        <li><b>Check the architecture</b>: classes grouped by layer, dependency-rule violations in red, design findings such as I/O in a loop.</li>
+        <li><b>See the whole codebase</b>: <b>⛶ Codebase</b> in the class diagram shows every class the entry points reach, folder by folder.</li>
+        <li><b>Find your way</b>: find calls and classes, show callers, list every path from the entry points to a method, review a branch.</li>
+      </ul>
+
+      <h3>Requirements</h3>
+      <ul>
+        <li><b>Node.js 20 or newer</b> (found on the PATH or in nvm; otherwise set it under <b>Settings | Tools | Seqcall</b>).</li>
+        <li>C#: the .NET 10 runtime and the SDK your solution uses, with packages restored.</li>
+      </ul>
+      <p><i>Preview:</i> hidden classes and diagram options are not yet kept across IDE restarts.</p>
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.jcef</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <toolWindow id="Seqcall" anchor="right" icon="AllIcons.Toolwindows.ToolWindowHierarchy"
+                    factoryClass="dev.seqcall.rider.SeqcallToolWindowFactory"/>
+        <applicationConfigurable parentId="tools" id="dev.seqcall.settings" displayName="Seqcall"
+                                 instance="dev.seqcall.rider.SeqcallConfigurable"/>
+        <notificationGroup id="Seqcall" displayType="BALLOON"/>
+        <postStartupActivity implementation="dev.seqcall.rider.SmokeStartup"/>
+        <postStartupActivity implementation="dev.seqcall.rider.UpdateStartup"/>
+    </extensions>
+
+    <actions>
+        <action id="Seqcall.ShowSequenceDiagram" class="dev.seqcall.rider.ShowSequenceDiagramAction"
+                text="Show Sequence Diagram" description="Seqcall: sequence diagram of the method at the caret">
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+            <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt shift K"/>
+        </action>
+        <action id="Seqcall.InfoAtCaret" class="dev.seqcall.rider.InfoAtCaretAction"
+                text="Seqcall: Info at Caret" description="Seqcall: which implementation runs here, the entry points that reach this method, its I/O">
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+        </action>
+        <action id="Seqcall.ShowMemory" class="dev.seqcall.rider.ShowMemoryAction"
+                text="Seqcall: Show Memory" description="Seqcall: the memory its own process and the C# analysis use">
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+        </action>
+        <action id="Seqcall.FreeMemory" class="dev.seqcall.rider.FreeMemoryAction"
+                text="Seqcall: Free Memory" description="Seqcall: drop the caches and stop the C# analysis (it loads again with the next diagram)">
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+        </action>
+        <action id="Seqcall.ShowClassDiagram" class="dev.seqcall.rider.ShowClassDiagramAction"
+                text="Show Class Diagram" description="Seqcall: class diagram of the visible interaction">
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+        </action>
+        <action id="Seqcall.CheckForUpdates" class="dev.seqcall.rider.CheckForUpdatesAction"
+                text="Check for Seqcall Updates" description="Seqcall: install a newer version from the GitHub releases">
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+        </action>
+    </actions>
+</idea-plugin>

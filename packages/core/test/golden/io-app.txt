@@ -1,0 +1,167 @@
+════ http GET /notes/:id (src/routes.ts#<module>.showNote)
+── opened
+participants: routes «module» | :NoteController «controller» [Presentation]
+found · → routes: showNote()  ⊖
+  call routes → :NoteController: show(id)  async · ⊕
+── Overview
+participants: routes «module» | :NoteController «controller» [Presentation] | :NoteService «service» [Application] | :FileNotes «adapter» [Infrastructure]
+found · → routes: showNote()  ⊖
+  call routes → :NoteController: show(id)  async · ⊖
+    call :NoteController → :NoteService: load(id)  async · ⊖
+      call :NoteService → :FileNotes: read(id)  async · ⊕ · I/O: file
+    call :NoteController → :NoteService: shout(text)
+⚠ layer-violation: Layer violation: NoteService → FileNotes
+── Expand all
+participants: routes «module» | :NoteController «controller» [Presentation] | :NoteService «service» [Application] | :FileNotes «adapter» [Infrastructure]
+found · → routes: showNote()  ⊖
+  call routes → :NoteController: show(id)  async · ⊖
+    call :NoteController → :NoteService: load(id)  async · ⊖
+      call :NoteService → :FileNotes: read(id)  async · ⊖ · I/O: file
+        self :FileNotes → :FileNotes: path(id)
+    call :NoteController → :NoteService: shout(text)
+⚠ layer-violation: Layer violation: NoteService → FileNotes
+── class diagram
+class routes «module»: showNote
+class NoteController «controller» [Presentation]: show
+class NoteService «service» [Application] I/O: http: load, shout
+class FileNotes «adapter» [Infrastructure] I/O: file: read, path
+association NoteController → NoteService "service"
+association NoteService → FileNotes "notes" VIOLATION Application → Infrastructure: an inner layer depends on an outer layer
+dependency routes → NoteController
+
+════ http POST /notes/:id/share (src/routes.ts#<module>.shareNote)
+── opened
+participants: routes «module» | :NoteController «controller» [Presentation]
+found · → routes: shareNote()  ⊖
+  call routes → :NoteController: share(id)  async · ⊕
+── Overview
+participants: routes «module» | :NoteController «controller» [Presentation] | :NoteService «service» [Application] | :FileNotes «adapter» [Infrastructure]
+found · → routes: shareNote()  ⊖
+  call routes → :NoteController: share(id)  async · ⊖
+    call :NoteController → :NoteService: publish(id)  async · ⊖ · I/O: http
+      self :NoteService → :NoteService: load(id)  async · ⊖
+        call :NoteService → :FileNotes: read(id)  async · ⊕ · I/O: file
+⚠ layer-violation: Layer violation: NoteService → FileNotes
+── Expand all
+participants: routes «module» | :NoteController «controller» [Presentation] | :NoteService «service» [Application] | :FileNotes «adapter» [Infrastructure]
+found · → routes: shareNote()  ⊖
+  call routes → :NoteController: share(id)  async · ⊖
+    call :NoteController → :NoteService: publish(id)  async · ⊖ · I/O: http
+      self :NoteService → :NoteService: load(id)  async · ⊖
+        call :NoteService → :FileNotes: read(id)  async · ⊖ · I/O: file
+          self :FileNotes → :FileNotes: path(id)
+⚠ layer-violation: Layer violation: NoteService → FileNotes
+── class diagram
+class routes «module»: shareNote
+class NoteController «controller» [Presentation]: share
+class NoteService «service» [Application] I/O: http: publish, load
+class FileNotes «adapter» [Infrastructure] I/O: file: read, path
+association NoteController → NoteService "service"
+association NoteService → FileNotes "notes" VIOLATION Application → Infrastructure: an inner layer depends on an outer layer
+dependency routes → NoteController
+
+════ method (src/controllers/note-controller.ts#NoteController.show)
+── opened
+participants: :NoteController «controller» [Presentation] | :NoteService «service» [Application]
+found · → :NoteController: show()  ⊖
+  call :NoteController → :NoteService: load(id)  async · ⊕ · I/O: file (below)
+  call :NoteController → :NoteService: shout(text)
+── Overview
+participants: :NoteController «controller» [Presentation] | :NoteService «service» [Application] | :FileNotes «adapter» [Infrastructure]
+found · → :NoteController: show()  ⊖
+  call :NoteController → :NoteService: load(id)  async · ⊖
+    call :NoteService → :FileNotes: read(id)  async · ⊕ · I/O: file
+  call :NoteController → :NoteService: shout(text)
+⚠ layer-violation: Layer violation: NoteService → FileNotes
+── Expand all
+participants: :NoteController «controller» [Presentation] | :NoteService «service» [Application] | :FileNotes «adapter» [Infrastructure]
+found · → :NoteController: show()  ⊖
+  call :NoteController → :NoteService: load(id)  async · ⊖
+    call :NoteService → :FileNotes: read(id)  async · ⊖ · I/O: file
+      self :FileNotes → :FileNotes: path(id)
+  call :NoteController → :NoteService: shout(text)
+⚠ layer-violation: Layer violation: NoteService → FileNotes
+── class diagram
+class NoteController «controller» [Presentation]: show
+class NoteService «service» [Application] I/O: http: load, shout
+class FileNotes «adapter» [Infrastructure] I/O: file: read, path
+association NoteController → NoteService "service"
+association NoteService → FileNotes "notes" VIOLATION Application → Infrastructure: an inner layer depends on an outer layer
+
+════ method (src/controllers/note-controller.ts#NoteController.share)
+── opened
+participants: :NoteController «controller» [Presentation] | :NoteService «service» [Application]
+found · → :NoteController: share()  ⊖
+  call :NoteController → :NoteService: publish(id)  async · ⊕ · I/O: http, file
+── Overview
+participants: :NoteController «controller» [Presentation] | :NoteService «service» [Application] | :FileNotes «adapter» [Infrastructure]
+found · → :NoteController: share()  ⊖
+  call :NoteController → :NoteService: publish(id)  async · ⊖ · I/O: http
+    self :NoteService → :NoteService: load(id)  async · ⊖
+      call :NoteService → :FileNotes: read(id)  async · ⊕ · I/O: file
+⚠ layer-violation: Layer violation: NoteService → FileNotes
+── Expand all
+participants: :NoteController «controller» [Presentation] | :NoteService «service» [Application] | :FileNotes «adapter» [Infrastructure]
+found · → :NoteController: share()  ⊖
+  call :NoteController → :NoteService: publish(id)  async · ⊖ · I/O: http
+    self :NoteService → :NoteService: load(id)  async · ⊖
+      call :NoteService → :FileNotes: read(id)  async · ⊖ · I/O: file
+        self :FileNotes → :FileNotes: path(id)
+⚠ layer-violation: Layer violation: NoteService → FileNotes
+── class diagram
+class NoteController «controller» [Presentation]: share
+class NoteService «service» [Application] I/O: http: publish, load
+class FileNotes «adapter» [Infrastructure] I/O: file: read, path
+association NoteController → NoteService "service"
+association NoteService → FileNotes "notes" VIOLATION Application → Infrastructure: an inner layer depends on an outer layer
+
+════ method (src/controllers/note-controller.ts#NoteController.archive)
+── opened
+participants: :NoteController «controller» [Presentation] | :Archiver «service» [Application]
+found · → :NoteController: archive()  ⊖
+  call :NoteController → :Archiver: run(id)  async · ⊕
+── Overview
+participants: :NoteController «controller» [Presentation] | :Archiver «service» [Application] | :FileNotes «adapter, seam» [Infrastructure]
+found · → :NoteController: archive()  ⊖
+  call :NoteController → :Archiver: run(id)  async · ⊖
+    self :Archiver → :Archiver: keep(id, `archived ${id}`)  async · ⊖
+      call :Archiver → :FileNotes: write(`archive/${id}`, text)  async · ⊕ · impls: FileNotes → FileNotes · I/O: file
+── Expand all
+participants: :NoteController «controller» [Presentation] | :Archiver «service» [Application] | :FileNotes «adapter, seam» [Infrastructure]
+found · → :NoteController: archive()  ⊖
+  call :NoteController → :Archiver: run(id)  async · ⊖
+    self :Archiver → :Archiver: keep(id, `archived ${id}`)  async · ⊖
+      call :Archiver → :FileNotes: write(`archive/${id}`, text)  async · ⊖ · impls: FileNotes → FileNotes · I/O: file
+        self :FileNotes → :FileNotes: path(id)
+── class diagram
+class NoteController «controller» [Presentation]: archive
+class Archiver «service» [Application]: run, keep
+class FileNotes «adapter, seam» [Infrastructure] I/O: file: write, path
+class NoteStore «interface, port»: write
+association NoteController → Archiver
+association Archiver → NoteStore "store"
+realization FileNotes → NoteStore
+
+════ method (src/services/alerter.ts#Alerter.escalate)
+── opened
+participants: :Alerter «service» [Application]
+found · → :Alerter: escalate()  ⊖
+  self :Alerter → :Alerter: alert(id)  async · ⊕
+── Overview
+participants: :Alerter «service» [Application] | :Notifier «interface, port, seam» | :AuditLog «interface, port, seam»
+found · → :Alerter: escalate()  ⊖
+  self :Alerter → :Alerter: alert(id)  async · ⊖
+    call :Alerter → :Notifier: notify(id)  async · impls: MailNotifier, PagerNotifier, SlackNotifier · I/O: http (below)
+    call :Alerter → :AuditLog: record(id)  impls: FileAuditLog, MemoryAuditLog
+── Expand all
+participants: :Alerter «service» [Application] | :Notifier «interface, port, seam» | :AuditLog «interface, port, seam»
+found · → :Alerter: escalate()  ⊖
+  self :Alerter → :Alerter: alert(id)  async · ⊖
+    call :Alerter → :Notifier: notify(id)  async · impls: MailNotifier, PagerNotifier, SlackNotifier · I/O: http (below)
+    call :Alerter → :AuditLog: record(id)  impls: FileAuditLog, MemoryAuditLog
+── class diagram
+class Alerter «service» [Application]: escalate, alert
+class Notifier «interface, port, seam»: notify
+class AuditLog «interface, port, seam»: record
+association Alerter → Notifier
+association Alerter → AuditLog "audit"

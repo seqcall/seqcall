@@ -1,0 +1,38 @@
+{
+  "name": "seqcall",
+  "private": true,
+  "license": "Apache-2.0",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build -w @seqcall/vscode",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "vitest run",
+    "coverage": "vitest run --coverage --maxWorkers=4",
+    "coverage:cs": "node scripts/coverage-cs.mjs",
+    "coverage:vscode": "node scripts/coverage-vscode.mjs",
+    "baseline": "node scripts/baseline.mjs",
+    "coverage:kt": "node packages/rider/build.mjs koverHtmlReport koverXmlReport koverLog",
+    "test:ext": "npm run test:ext -w @seqcall/vscode",
+    "dev:host": "node packages/vscode/launch-dev.mjs",
+    "build:rider": "node packages/rider/build.mjs",
+    "build:vim": "node packages/vim/build.mjs",
+    "release": "node scripts/release.mjs",
+    "set-version": "node scripts/set-version.mjs",
+    "leak-check": "node scripts/leak-check.mjs"
+  },
+  "devDependencies": {
+    "@types/jsdom": "^30.0.0",
+    "@types/node": "^22.20.5",
+    "@vitest/coverage-v8": "^5.0.3",
+    "esbuild": "^0.28.2",
+    "istanbul-lib-coverage": "^3.2.2",
+    "istanbul-lib-report": "^3.0.1",
+    "istanbul-reports": "^3.2.0",
+    "jsdom": "^29.1.1",
+    "typescript": "^5.9.3",
+    "v8-to-istanbul": "^9.3.0",
+    "vitest": "^5.0.3"
+  }
+}

@@ -1,0 +1,47 @@
+name: Bug report
+description: A wrong diagram, an error, something that does not work
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Do not paste code you may not share; rewrite the case with made-up names (Order, Invoice, Shop) and the same shape.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what you expected
+      description: Steps to reproduce; a screenshot of the diagram helps.
+    validations:
+      required: true
+  - type: textarea
+    id: code
+    attributes:
+      label: Code that shows it
+      description: The smallest piece of code (or a public repository and the method) where it happens.
+      render: text
+  - type: dropdown
+    id: editor
+    attributes:
+      label: Editor
+      options: [VS Code (or Cursor / VSCodium / Windsurf), JetBrains IDE (Rider / PhpStorm / …), Vim, Neovim, AI agent (CLI / MCP)]
+    validations:
+      required: true
+  - type: dropdown
+    id: language
+    attributes:
+      label: Language
+      options: [TypeScript / JavaScript, C#, PHP]
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      placeholder: Seqcall 0.1.0, VS Code 1.96, Ubuntu 24.04
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: Seqcall log
+      description: VS Code — the "Seqcall" output channel; JetBrains — the SEQCALL lines of Help → Show Log; Vim / Neovim — :SeqcallLog.
+      render: text

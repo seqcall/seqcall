@@ -1,0 +1,6 @@
+# LF everywhere, also in a Windows checkout: the shell, Vim and Gradle scripts break with CRLF, and the tests compare
+# text and positions byte by byte.
+* text=auto eol=lf
+*.bat text eol=crlf
+*.png binary
+*.jar binary

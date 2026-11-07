@@ -1,0 +1,93 @@
+# Builds the downloadable packages (docs/INSTALL.md):
+#   push a tag v<x.y.z>   → the SonarQube Cloud release gate (sonar.yml, when configured), tests, then a GitHub release with the .vsix, the Rider zip, the Vim tarball and SHA256SUMS
+#   Run workflow (manual) → the same build, packages kept as a workflow artifact only (no release)
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  # Rider the plugin is compiled against (JetBrains' Maven repository; no installed IDE on the runner).
+  RIDER_VERSION: 2026.2.3.1
+
+jobs:
+  sonar:
+    uses: ./.github/workflows/sonar.yml
+    secrets: inherit
+
+  package:
+    needs: sonar
+    # Pinned (ubuntu-latest moves to Ubuntu 26 from 2026-10-19): the disk clean-up and the toolchains were tested
+    # on 24.04; move up deliberately with a manual run.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      # The Rider the plugin compiles against is ~2.4 GB, and several GB more once unpacked: more than the
+      # runner's ~14 GB free leave after the toolchains. Remove preinstalled toolkits we never use (~20 GB).
+      - name: Free disk space
+        run: |
+          df -h /
+          sudo rm -rf /usr/local/lib/android /opt/ghc /usr/local/.ghcup /opt/hostedtoolcache/CodeQL /usr/local/share/boost /usr/share/swift
+          df -h /
+
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      # Rider 2026.2 needs Java 25 to compile the plugin.
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '25'
+
+      - run: npm ci
+
+      # the C# fixture uses NuGet packages (Autofac in Sample.Batch): without a restore their types do not resolve
+      - run: dotnet restore fixtures/sample-cs/Sample.sln
+
+      - name: Version from the tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: node scripts/set-version.mjs "${GITHUB_REF_NAME}"
+
+      - name: Test and package
+        run: SEQCALL_JAVA_HOME="$JAVA_HOME" node scripts/release.mjs
+
+      # nothing of the developers' real repositories in what ships (scripts/leak-check.mjs): the tracked files and the
+      # packages; the word list is the LEAK_WORDS secret (without it, home paths and e-mails only)
+      - name: Leak check
+        env:
+          LEAK_WORDS: ${{ secrets.LEAK_WORDS }}
+        run: node scripts/leak-check.mjs && node scripts/leak-check.mjs release/*.vsix release/*.zip release/*.tar.gz
+
+      - name: Disk space after the build
+        if: always()
+        run: df -h /
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: seqcall-packages
+          path: release/
+
+      - name: GitHub release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        # Not a pre-release: `gh release download` without a tag (docs/INSTALL.md) only finds the latest full release.
+        # The notes: docs/release-notes/<tag>.md when there is one, then the install link (and the generated changelog).
+        run: |
+          notes="Installation per editor: [docs/INSTALL.md](https://github.com/${GITHUB_REPOSITORY}/blob/${GITHUB_REF_NAME}/docs/INSTALL.md)"
+          if [ -f "docs/release-notes/$GITHUB_REF_NAME.md" ]; then notes="$(cat "docs/release-notes/$GITHUB_REF_NAME.md")"$'\n\n'"$notes"; fi
+          gh release create "$GITHUB_REF_NAME" release/* --title "Seqcall ${GITHUB_REF_NAME#v}" \
+            --generate-notes --latest --notes "$notes"

@@ -1,0 +1,17 @@
+{
+  "name": "@seqcall/devhost",
+  "version": "0.0.1",
+  "private": true,
+  "license": "Apache-2.0",
+  "description": "Standalone browser host for the webview + real core (dev/visual checks; proves host portability).",
+  "scripts": {
+    "build": "node build.mjs",
+    "start": "node build.mjs && node dist/server.cjs",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@seqcall/core": "*",
+    "@seqcall/protocol": "*",
+    "@seqcall/webview": "*"
+  }
+}

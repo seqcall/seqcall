@@ -1,0 +1,100 @@
+# Static analysis on SonarQube Cloud (docs/TESTING.md §10): two projects, <org>_seqcall (TypeScript / JavaScript /
+# Kotlin, sonar-project.properties) and <org>_seqcall-csharp (the C# sidecar, SonarScanner for .NET).
+#   push to main          → analysis, the dashboard stays current
+#   called by release.yml → the release gate: a failure stops the release
+#   Run workflow (manual) → the same
+# Optional: needs the SONAR_TOKEN secret and the SONAR_ORGANIZATION variable (docs/TESTING.md §10); without them
+# the analysis is skipped with a notice, and a release goes ahead ungated.
+name: SonarQube Cloud
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  workflow_call:
+    secrets:
+      SONAR_TOKEN:
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  # A job-level `if` cannot read secrets, so a first job tells whether the analysis is configured.
+  configured:
+    runs-on: ubuntu-24.04
+    outputs:
+      on: ${{ steps.check.outputs.on }}
+    steps:
+      - id: check
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          ORG: ${{ vars.SONAR_ORGANIZATION }}
+        run: |
+          if [ -n "$SONAR_TOKEN" ] && [ -n "$ORG" ]; then echo "on=true" >> "$GITHUB_OUTPUT"
+          else echo "::notice::SonarQube Cloud skipped: set the SONAR_TOKEN secret and the SONAR_ORGANIZATION variable (docs/TESTING.md §10)"; fi
+
+  analyse:
+    needs: configured
+    if: needs.configured.outputs.on == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      SONAR_HOST_URL: https://sonarcloud.io
+      ORG: ${{ vars.SONAR_ORGANIZATION }}
+    steps:
+      # the whole history: Sonar uses blame to tell new code from old
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      - run: npm ci
+
+      # the C# fixture uses NuGet packages (Autofac in Sample.Batch): without a restore their types do not resolve
+      - run: dotnet restore fixtures/sample-cs/Sample.sln
+
+      - name: Version
+        id: version
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then v="${GITHUB_REF_NAME#v}"; else v="$(node -p "require('./packages/vscode/package.json').version")"; fi
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+
+      # Coverage is shown on the dashboard but is not part of the gate: a dip below a threshold must not stop the
+      # analysis (the release workflow runs the tests that gate the release).
+      - name: Coverage (TS / JS, C#)
+        continue-on-error: true
+        run: npm run build && npm run coverage && npm run coverage:cs
+
+      - name: TypeScript / JavaScript / Kotlin
+        uses: SonarSource/sonarqube-scan-action@d209202bc7d53ff1cc128f7f907dac145c9d6ae9 # v8.3.0
+        with:
+          args: >
+            -Dsonar.organization=${{ vars.SONAR_ORGANIZATION }}
+            -Dsonar.projectKey=${{ vars.SONAR_ORGANIZATION }}_seqcall
+            -Dsonar.projectVersion=${{ steps.version.outputs.version }}
+
+      - name: C# sidecar
+        working-directory: packages/csharp
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          dotnet tool install --global dotnet-sonarscanner --version 12.0.0
+          cover="$GITHUB_WORKSPACE/coverage/csharp/coverage.opencover.xml"
+          dotnet sonarscanner begin /k:"${ORG}_seqcall-csharp" /n:"Seqcall C#" /o:"$ORG" /v:"$VERSION" \
+            /d:sonar.host.url="$SONAR_HOST_URL" /d:sonar.token="$SONAR_TOKEN" \
+            $( [ -f "$cover" ] && echo "/d:sonar.cs.opencover.reportsPaths=$cover" )
+          dotnet build Seqcall.CSharp.sln -c Release --no-incremental
+          dotnet sonarscanner end /d:sonar.token="$SONAR_TOKEN"
+
+      - name: Release gate
+        run: node scripts/sonar.mjs gate "${ORG}_seqcall" "${ORG}_seqcall-csharp"

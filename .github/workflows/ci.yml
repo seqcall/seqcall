@@ -1,0 +1,57 @@
+# Tests on every push to main and every pull request (CONTRIBUTING.md): typecheck, the vitest suites (with the C#
+# end-to-end tests against the built sidecar, the Vim tests and the page tests in Chrome), the C# sidecar's xUnit
+# tests, the VS Code extension-host tests (under xvfb) and the leak check of the tracked files.
+# Not here: the Rider plugin's tests, which need a Rider of several GB; the release workflow runs them.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      - run: npm ci
+
+      # the C# fixture uses NuGet packages (Autofac in Sample.Batch): without a restore their types do not resolve
+      - run: dotnet restore fixtures/sample-cs/Sample.sln
+
+      - run: npm run typecheck
+
+      # the extension and the C# sidecar (packages/vscode/dist/csharp), which the end-to-end tests use
+      - run: npm run build
+
+      - run: npm test
+
+      - run: dotnet test packages/csharp -c Release --nologo -nodeReuse:false
+
+      - name: Extension-host tests
+        run: xvfb-run -a npm run test:ext
+
+      # pull requests from forks get no secrets: then only home paths and e-mail addresses are checked
+      - name: Leak check
+        env:
+          LEAK_WORDS: ${{ secrets.LEAK_WORDS }}
+        run: node scripts/leak-check.mjs

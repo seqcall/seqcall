@@ -1,0 +1,19 @@
+{
+  "name": "@seqcall/webview",
+  "version": "0.0.1",
+  "private": true,
+  "license": "Apache-2.0",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "dependencies": {
+    "@dagrejs/dagre": "^3.1.1",
+    "@seqcall/protocol": "*",
+    "elkjs": "^0.12.0"
+  },
+  "scripts": {
+    "build": "node build.mjs",
+    "dev": "node build.mjs --dev",
+    "watch": "node build.mjs --dev --watch",
+    "typecheck": "tsc -p tsconfig.json"
+  }
+}

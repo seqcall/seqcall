@@ -1,0 +1,516 @@
+════ cli src/console/terminal.ts: report() (src/console/report.ts#<module>.report)
+── opened
+participants: report «module» | terminal «module»
+found · → report: report()  ⊖
+  ┌ loop [each name of names]
+  call report → terminal: line(name)  impls: terminal → terminal
+── Overview
+participants: report «module» | terminal «module»
+found · → report: report()  ⊖
+  ┌ loop [each name of names]
+  call report → terminal: line(name)  impls: terminal → terminal
+── Expand all
+participants: report «module» | terminal «module»
+found · → report: report()  ⊖
+  ┌ loop [each name of names]
+  call report → terminal: line(name)  impls: terminal → terminal
+── class diagram
+class report «module»: report
+class terminal «module»: line
+class Output «interface»: line
+realization terminal → Output
+dependency report → Output
+
+════ method (src/controllers/user-controller.ts#UserController.getUser)
+── opened
+participants: :UserController «controller» [Presentation] | :UserService «service» [Application] | :UserDto «data» [Domain] | Logger «static» | format «module»
+found · → :UserController: getUser()  ⊖
+  self :UserController → :UserController: validate(id)  ⊕
+  call :UserController → Logger: info(`getUser ${id}`)  ⊕
+  call :UserController → :UserService: findUser(id)  async · ⊕
+  call :UserController → format: formatName(user)  ⊕
+  create :UserController → :UserDto: constructor(user.name, formatName(user))
+  ┌ loop [each t of ['a', 'b']]
+  call :UserController → format: slugify(t)
+── Overview
+participants: :UserController «controller» [Presentation] | :UserService «service» [Application] | replica:UserRepository «interface, repository, seam, port» [Ports] | primary:UserRepository «interface, repository, seam, port» [Ports] | :UserDto «data» [Domain] | Logger «static» | format «module»
+found · → :UserController: getUser()  ⊖
+  self :UserController → :UserController: validate(id)  ⊕
+  call :UserController → Logger: info(`getUser ${id}`)  ⊕
+  ↯ throw [!user] Error (leaves findUser)
+  call :UserController → :UserService: findUser(id)  async · ⊖
+    call :UserService → replica:UserRepository: findById(id)  async · impls: InMemoryUserRepository, SqlUserRepository
+    ↯ return [cached] (leaves findUser)
+    call :UserService → primary:UserRepository: findById(id)  async · impls: InMemoryUserRepository, SqlUserRepository
+  call :UserController → format: formatName(user)  ⊕
+  create :UserController → :UserDto: constructor(user.name, formatName(user))
+  ┌ loop [each t of ['a', 'b']]
+  call :UserController → format: slugify(t)
+── Expand all
+participants: :UserController «controller» [Presentation] | :UserService «service» [Application] | replica:UserRepository «interface, repository, seam, port» [Ports] | primary:UserRepository «interface, repository, seam, port» [Ports] | :UserDto «data» [Domain] | Logger «static» | format «module»
+found · → :UserController: getUser()  ⊖
+  ↯ branch [!id] (leaves validate)
+  self :UserController → :UserController: validate(id)  ⊖
+  call :UserController → Logger: info(`getUser ${id}`)  ⊖
+    self Logger → Logger: write('INFO', message)
+  ↯ throw [!user] Error (leaves findUser)
+  call :UserController → :UserService: findUser(id)  async · ⊖
+    call :UserService → replica:UserRepository: findById(id)  async · impls: InMemoryUserRepository, SqlUserRepository
+    ↯ return [cached] (leaves findUser)
+    call :UserService → primary:UserRepository: findById(id)  async · impls: InMemoryUserRepository, SqlUserRepository
+  call :UserController → format: formatName(user)  ⊖
+    self format → format: slugify(user.name)
+  create :UserController → :UserDto: constructor(user.name, formatName(user))
+  ┌ loop [each t of ['a', 'b']]
+  call :UserController → format: slugify(t)
+── class diagram
+class UserController «controller» [Presentation]: getUser, validate
+class UserService «service» [Application]: findUser
+class UserRepository «interface, repository, seam, port» [Ports]: findById
+class UserDto «data» [Domain]: constructor
+class Logger «static»: info, write
+class format «module»: formatName, slugify
+association UserController → UserService
+association UserService → UserRepository "primary"
+association UserService → UserRepository "replica"
+dependency UserController → Logger
+dependency UserController → format
+dependency UserController → UserDto "«create»"
+
+════ method (src/controllers/user-controller.ts#UserController.renameUser)
+── opened
+participants: :UserController «controller» [Presentation] | :UserService «service» [Application] | :BillingService «singleton, service» [Application]
+found · → :UserController: renameUser()  ⊖
+  self :UserController → :UserController: validate(id)  ⊕
+  call :UserController → :UserService: rename(id, name)  async · ⊕
+  call :UserController → :BillingService: bill(user, 1)  async · ⊕
+── Overview
+participants: :UserController «controller» [Presentation] | :UserService «service» [Application] | :BillingService «singleton, service» [Application] | :StripeGateway «seam, gateway» [Application] | replica:UserRepository «interface, repository, seam, port» [Ports] | primary:UserRepository «interface, repository, seam, port» [Ports] | :User [Domain] | :Notifier «abstract, seam» [Infrastructure] | Logger «static»
+found · → :UserController: renameUser()  ⊖
+  self :UserController → :UserController: validate(id)  ⊕
+  call :UserController → :UserService: rename(id, name)  async · ⊖
+    ↯ throw [!user] Error (leaves findUser)
+    self :UserService → :UserService: findUser(id)  async · ⊖
+      call :UserService → replica:UserRepository: findById(id)  async · impls: InMemoryUserRepository, SqlUserRepository
+      ↯ return [cached] (leaves findUser)
+      call :UserService → primary:UserRepository: findById(id)  async · impls: InMemoryUserRepository, SqlUserRepository
+    call :UserService → :User: rename(name)
+    call :UserService → primary:UserRepository: save(user)  async · impls: InMemoryUserRepository, SqlUserRepository
+    call :UserService → :Notifier: notify(user, `renamed to ${name}`)  async · impls: EmailNotifier, SmsNotifier
+  call :UserController → :BillingService: bill(user, 1)  async · ⊖
+    call :BillingService → :StripeGateway: charge(user.id, amount)  async · ⊕ · impls: StripeGateway → StripeGateway
+    call :BillingService → Logger: info(receipt)  ⊕
+⚠ layer-violation: Layer violation: UserService → Notifier
+── Expand all
+participants: :UserController «controller» [Presentation] | :UserService «service» [Application] | :BillingService «singleton, service» [Application] | :StripeGateway «seam, gateway» [Application] | replica:UserRepository «interface, repository, seam, port» [Ports] | primary:UserRepository «interface, repository, seam, port» [Ports] | :User [Domain] | :Notifier «abstract, seam» [Infrastructure] | Logger «static»
+found · → :UserController: renameUser()  ⊖
+  ↯ branch [!id] (leaves validate)
+  self :UserController → :UserController: validate(id)  ⊖
+  call :UserController → :UserService: rename(id, name)  async · ⊖
+    ↯ throw [!user] Error (leaves findUser)
+    self :UserService → :UserService: findUser(id)  async · ⊖
+      call :UserService → replica:UserRepository: findById(id)  async · impls: InMemoryUserRepository, SqlUserRepository
+      ↯ return [cached] (leaves findUser)
+      call :UserService → primary:UserRepository: findById(id)  async · impls: InMemoryUserRepository, SqlUserRepository
+    call :UserService → :User: rename(name)
+    call :UserService → primary:UserRepository: save(user)  async · impls: InMemoryUserRepository, SqlUserRepository
+    call :UserService → :Notifier: notify(user, `renamed to ${name}`)  async · impls: EmailNotifier, SmsNotifier
+  call :UserController → :BillingService: bill(user, 1)  async · ⊖
+    call :BillingService → :StripeGateway: charge(user.id, amount)  async · ⊖ · impls: StripeGateway → StripeGateway
+      call :StripeGateway → Logger: info(`charging ${customerId}`)  ⊖
+        self Logger → Logger: write('INFO', message)
+    call :BillingService → Logger: info(receipt)  ⊖
+      self Logger → Logger: write('INFO', message)
+⚠ layer-violation: Layer violation: UserService → Notifier
+── class diagram
+class UserController «controller» [Presentation]: renameUser, validate
+class UserService «service» [Application]: rename, findUser
+class BillingService «singleton, service» [Application]: bill
+class StripeGateway «seam, gateway» [Application]: charge
+class UserRepository «interface, repository, seam, port» [Ports]: findById, save
+class User [Domain]: rename
+class Notifier «abstract, seam» [Infrastructure]: notify
+class Logger «static»: info, write
+class PaymentGateway «interface, gateway» [Application]: charge
+association UserController → UserService
+association UserService → UserRepository "primary"
+association UserService → UserRepository "replica"
+association UserService → Notifier VIOLATION Application → Infrastructure: an inner layer depends on an outer layer
+association BillingService → PaymentGateway "gateway"
+realization StripeGateway → PaymentGateway
+dependency UserService → User
+dependency UserController → BillingService
+dependency StripeGateway → Logger
+dependency BillingService → Logger
+
+════ method (src/controllers/admin-controller.ts#AdminController.audit)
+── opened
+participants: :AdminController «controller» [Presentation] | :UserService «service» [Application] | :BillingService «singleton, service» [Application]
+found · → :AdminController: audit()  ⊖
+  call :AdminController → :UserService: findUser(id)  async · ⊕
+  call :AdminController → :BillingService: bill(user, 0)  async · ⊕
+── Overview
+participants: :AdminController «controller» [Presentation] | :UserService «service» [Application] | :BillingService «singleton, service» [Application] | :StripeGateway «seam, gateway» [Application] | replica:UserRepository «interface, repository, seam, port» [Ports] | primary:UserRepository «interface, repository, seam, port» [Ports] | Logger «static»
+found · → :AdminController: audit()  ⊖
+  ↯ throw [!user] Error (leaves findUser)
+  call :AdminController → :UserService: findUser(id)  async · ⊖
+    call :UserService → replica:UserRepository: findById(id)  async · impls: InMemoryUserRepository, SqlUserRepository
+    ↯ return [cached] (leaves findUser)
+    call :UserService → primary:UserRepository: findById(id)  async · impls: InMemoryUserRepository, SqlUserRepository
+  call :AdminController → :BillingService: bill(user, 0)  async · ⊖
+    call :BillingService → :StripeGateway: charge(user.id, amount)  async · ⊕ · impls: StripeGateway → StripeGateway
+    call :BillingService → Logger: info(receipt)  ⊕
+── Expand all
+participants: :AdminController «controller» [Presentation] | :UserService «service» [Application] | :BillingService «singleton, service» [Application] | :StripeGateway «seam, gateway» [Application] | replica:UserRepository «interface, repository, seam, port» [Ports] | primary:UserRepository «interface, repository, seam, port» [Ports] | Logger «static»
+found · → :AdminController: audit()  ⊖
+  ↯ throw [!user] Error (leaves findUser)
+  call :AdminController → :UserService: findUser(id)  async · ⊖
+    call :UserService → replica:UserRepository: findById(id)  async · impls: InMemoryUserRepository, SqlUserRepository
+    ↯ return [cached] (leaves findUser)
+    call :UserService → primary:UserRepository: findById(id)  async · impls: InMemoryUserRepository, SqlUserRepository
+  call :AdminController → :BillingService: bill(user, 0)  async · ⊖
+    call :BillingService → :StripeGateway: charge(user.id, amount)  async · ⊖ · impls: StripeGateway → StripeGateway
+      call :StripeGateway → Logger: info(`charging ${customerId}`)  ⊖
+        self Logger → Logger: write('INFO', message)
+    call :BillingService → Logger: info(receipt)  ⊖
+      self Logger → Logger: write('INFO', message)
+── class diagram
+class AdminController «controller» [Presentation]: audit
+class UserService «service» [Application]: findUser
+class BillingService «singleton, service» [Application]: bill
+class StripeGateway «seam, gateway» [Application]: charge
+class UserRepository «interface, repository, seam, port» [Ports]: findById
+class Logger «static»: info, write
+class PaymentGateway «interface, gateway» [Application]: charge
+association AdminController → UserService "users"
+association AdminController → BillingService "billing"
+association UserService → UserRepository "primary"
+association UserService → UserRepository "replica"
+association BillingService → PaymentGateway "gateway"
+realization StripeGateway → PaymentGateway
+dependency StripeGateway → Logger
+dependency BillingService → Logger
+
+════ method (src/services/import-service.ts#ImportService.importAll)
+── opened
+participants: :ImportService «service» [Application] | :UserRepository «interface, repository, seam, port» [Ports] | :Notifier «abstract, seam» [Infrastructure] | Logger «static»
+found · → :ImportService: importAll()  ⊖
+  ┌ alt [user.managerId / else]
+  ↯ branch [user.name.length === 0] (leaves importAll)
+  call :ImportService → :UserRepository: save(user)  async · impls: InMemoryUserRepository, SqlUserRepository
+  call :ImportService → :UserRepository: save(user)  async · impls: InMemoryUserRepository, SqlUserRepository
+  call :ImportService → :Notifier: notify(user, 'imported')  async · impls: EmailNotifier, SmsNotifier
+  ┌ opt [announce]
+  call :ImportService → Logger: info(`imported ${imported}`)  ⊕
+  call :ImportService → :UserRepository: findById('last')  async · impls: InMemoryUserRepository, SqlUserRepository
+  ↯ branch [catch] (leaves importAll)
+  call :ImportService → Logger: info('done')  ⊕
+⚠ layer-violation: Layer violation: ImportService → Notifier
+── Overview
+participants: :ImportService «service» [Application] | :UserRepository «interface, repository, seam, port» [Ports] | :Notifier «abstract, seam» [Infrastructure] | Logger «static»
+found · → :ImportService: importAll()  ⊖
+  ┌ alt [user.managerId / else]
+  ↯ branch [user.name.length === 0] (leaves importAll)
+  call :ImportService → :UserRepository: save(user)  async · impls: InMemoryUserRepository, SqlUserRepository
+  call :ImportService → :UserRepository: save(user)  async · impls: InMemoryUserRepository, SqlUserRepository
+  call :ImportService → :Notifier: notify(user, 'imported')  async · impls: EmailNotifier, SmsNotifier
+  ┌ opt [announce]
+  call :ImportService → Logger: info(`imported ${imported}`)  ⊕
+  call :ImportService → :UserRepository: findById('last')  async · impls: InMemoryUserRepository, SqlUserRepository
+  ↯ branch [catch] (leaves importAll)
+  call :ImportService → Logger: info('done')  ⊕
+⚠ layer-violation: Layer violation: ImportService → Notifier
+── Expand all
+participants: :ImportService «service» [Application] | :UserRepository «interface, repository, seam, port» [Ports] | :Notifier «abstract, seam» [Infrastructure] | Logger «static»
+found · → :ImportService: importAll()  ⊖
+  ┌ alt [user.managerId / else]
+  ↯ branch [user.name.length === 0] (leaves importAll)
+  call :ImportService → :UserRepository: save(user)  async · impls: InMemoryUserRepository, SqlUserRepository
+  call :ImportService → :UserRepository: save(user)  async · impls: InMemoryUserRepository, SqlUserRepository
+  call :ImportService → :Notifier: notify(user, 'imported')  async · impls: EmailNotifier, SmsNotifier
+  ┌ opt [announce]
+  call :ImportService → Logger: info(`imported ${imported}`)  ⊖
+    self Logger → Logger: write('INFO', message)
+  call :ImportService → :UserRepository: findById('last')  async · impls: InMemoryUserRepository, SqlUserRepository
+  ↯ branch [catch] (leaves importAll)
+  call :ImportService → Logger: info('done')  ⊖
+    self Logger → Logger: write('INFO', message)
+⚠ layer-violation: Layer violation: ImportService → Notifier
+── class diagram
+class ImportService «service» [Application]: importAll
+class UserRepository «interface, repository, seam, port» [Ports]: save, findById
+class Notifier «abstract, seam» [Infrastructure]: notify
+class Logger «static»: info, write
+association ImportService → UserRepository "repo"
+association ImportService → Notifier VIOLATION Application → Infrastructure: an inner layer depends on an outer layer
+dependency ImportService → Logger
+
+════ method (src/services/import-service.ts#ImportService.sync)
+── opened
+participants: :ImportService «service» [Application] | :UserRepository «interface, repository, seam, port» [Ports] | :Notifier «abstract, seam» [Infrastructure] | Logger «static»
+found · → :ImportService: sync()  ⊖
+  ┌ alt [mode = 'full' | 'deep' / else]
+  call :ImportService → :UserRepository: save(user)  async · impls: InMemoryUserRepository, SqlUserRepository
+  call :ImportService → Logger: info('skipped')  ⊕
+  ┌ loop [attempts < 3]
+  call :ImportService → :UserRepository: findById(user.id)  async · impls: InMemoryUserRepository, SqlUserRepository
+  ┌ alt [found / else]
+  self :ImportService → :ImportService: describe(found)
+  self :ImportService → :ImportService: fallback()
+  call :ImportService → Logger: info(label)  ⊕
+  ┌ opt [user.managerId && user.email.length > 0]
+  call :ImportService → :Notifier: notify(user, 'synced')  async · impls: EmailNotifier, SmsNotifier
+  ┌ loop [each u of [user]]
+  self :ImportService → :ImportService: describe(u)
+⚠ layer-violation: Layer violation: ImportService → Notifier
+── Overview
+participants: :ImportService «service» [Application] | :UserRepository «interface, repository, seam, port» [Ports] | :Notifier «abstract, seam» [Infrastructure] | Logger «static»
+found · → :ImportService: sync()  ⊖
+  ┌ alt [mode = 'full' | 'deep' / else]
+  call :ImportService → :UserRepository: save(user)  async · impls: InMemoryUserRepository, SqlUserRepository
+  call :ImportService → Logger: info('skipped')  ⊕
+  ┌ loop [attempts < 3]
+  call :ImportService → :UserRepository: findById(user.id)  async · impls: InMemoryUserRepository, SqlUserRepository
+  ┌ alt [found / else]
+  self :ImportService → :ImportService: describe(found)
+  self :ImportService → :ImportService: fallback()
+  call :ImportService → Logger: info(label)  ⊕
+  ┌ opt [user.managerId && user.email.length > 0]
+  call :ImportService → :Notifier: notify(user, 'synced')  async · impls: EmailNotifier, SmsNotifier
+  ┌ loop [each u of [user]]
+  self :ImportService → :ImportService: describe(u)
+⚠ layer-violation: Layer violation: ImportService → Notifier
+── Expand all
+participants: :ImportService «service» [Application] | :UserRepository «interface, repository, seam, port» [Ports] | :Notifier «abstract, seam» [Infrastructure] | Logger «static»
+found · → :ImportService: sync()  ⊖
+  ┌ alt [mode = 'full' | 'deep' / else]
+  call :ImportService → :UserRepository: save(user)  async · impls: InMemoryUserRepository, SqlUserRepository
+  call :ImportService → Logger: info('skipped')  ⊖
+    self Logger → Logger: write('INFO', message)
+  ┌ loop [attempts < 3]
+  call :ImportService → :UserRepository: findById(user.id)  async · impls: InMemoryUserRepository, SqlUserRepository
+  ┌ alt [found / else]
+  self :ImportService → :ImportService: describe(found)
+  self :ImportService → :ImportService: fallback()
+  call :ImportService → Logger: info(label)  ⊖
+    self Logger → Logger: write('INFO', message)
+  ┌ opt [user.managerId && user.email.length > 0]
+  call :ImportService → :Notifier: notify(user, 'synced')  async · impls: EmailNotifier, SmsNotifier
+  ┌ loop [each u of [user]]
+  self :ImportService → :ImportService: describe(u)
+⚠ layer-violation: Layer violation: ImportService → Notifier
+── class diagram
+class ImportService «service» [Application]: sync, describe, fallback
+class UserRepository «interface, repository, seam, port» [Ports]: save, findById
+class Notifier «abstract, seam» [Infrastructure]: notify
+class Logger «static»: info, write
+association ImportService → UserRepository "repo"
+association ImportService → Notifier VIOLATION Application → Infrastructure: an inner layer depends on an outer layer
+dependency ImportService → Logger
+
+════ method (src/services/sync-service.ts#SyncService.syncAll)
+── opened
+participants: :SyncService «service» [Application] | :Retrier «service» [Application] | :UserRepository «interface, repository, seam, port» [Ports] | Logger «static»
+found · → :SyncService: syncAll()  ⊖
+  ┌ loop [each u of users.filter(…)]
+  self :SyncService → :SyncService: label(u)
+  ┌ loop [each u of users]
+  call :SyncService → :UserRepository: save(u)  async · impls: InMemoryUserRepository, SqlUserRepository
+  call :SyncService → :Retrier: run(() => this.repo.findById(names[0]))  async · ⊕
+  self :SyncService → :SyncService: withLog(async () => { users.forEach((u) => this.label(u)); })  async · ⊕
+  call :SyncService → :UserRepository: findById('x')  async · impls: InMemoryUserRepository, SqlUserRepository
+  ┌ callback [this.repo.findById(…).then]
+  call :SyncService → Logger: info(String(found))  ⊕
+── Overview
+participants: :SyncService «service» [Application] | :Retrier «service» [Application] | :UserRepository «interface, repository, seam, port» [Ports] | Logger «static»
+found · → :SyncService: syncAll()  ⊖
+  ┌ loop [each u of users.filter(…)]
+  self :SyncService → :SyncService: label(u)
+  ┌ loop [each u of users]
+  call :SyncService → :UserRepository: save(u)  async · impls: InMemoryUserRepository, SqlUserRepository
+  call :SyncService → :Retrier: run(() => this.repo.findById(names[0]))  async · ⊕
+  self :SyncService → :SyncService: withLog(async () => { users.forEach((u) => this.label(u)); })  async · ⊕
+  call :SyncService → :UserRepository: findById('x')  async · impls: InMemoryUserRepository, SqlUserRepository
+  ┌ callback [this.repo.findById(…).then]
+  call :SyncService → Logger: info(String(found))  ⊕
+── Expand all
+participants: :SyncService «service» [Application] | :Retrier «service» [Application] | :UserRepository «interface, repository, seam, port» [Ports] | Logger «static»
+found · → :SyncService: syncAll()  ⊖
+  ┌ loop [each u of users.filter(…)]
+  self :SyncService → :SyncService: label(u)
+  ┌ loop [each u of users]
+  call :SyncService → :UserRepository: save(u)  async · impls: InMemoryUserRepository, SqlUserRepository
+  call :SyncService → :Retrier: run(() => this.repo.findById(names[0]))  async · ⊖
+    call :Retrier → Logger: info('attempt')  ⊖
+      self Logger → Logger: write('INFO', message)
+    call :Retrier → :SyncService: action()  async · ⊖ · via action
+      call :SyncService → :UserRepository: findById(names[0])  async · impls: InMemoryUserRepository, SqlUserRepository
+  self :SyncService → :SyncService: withLog(async () => { users.forEach((u) => this.label(u)); })  async · ⊖
+    call :SyncService → Logger: info('start')  ⊖
+      self Logger → Logger: write('INFO', message)
+    self :SyncService → :SyncService: work()  async · ⊖ · via work
+      ┌ loop [each u of users]
+      self :SyncService → :SyncService: label(u)
+  call :SyncService → :UserRepository: findById('x')  async · impls: InMemoryUserRepository, SqlUserRepository
+  ┌ callback [this.repo.findById(…).then]
+  call :SyncService → Logger: info(String(found))  ⊖
+    self Logger → Logger: write('INFO', message)
+── class diagram
+class SyncService «service» [Application]: syncAll, label, withLog
+class Retrier «service» [Application]: run
+class UserRepository «interface, repository, seam, port» [Ports]: save, findById
+class Logger «static»: info, write
+association SyncService → Retrier
+association SyncService → UserRepository "repo"
+dependency Retrier → Logger
+dependency SyncService → Logger
+
+════ method (src/services/export-service.ts#ExportService.exportUser)
+── opened
+participants: :ExportService «service» [Application] | :ExportBatch «service» [Application] | :UserRepository «interface, repository, seam, port» [Ports]
+found · → :ExportService: exportUser()  ⊖
+  create :ExportService → :ExportBatch: constructor()
+  self :ExportService → :ExportService: write(this.repo, id, batch)  async · ⊕
+  call :ExportService → :ExportBatch: add('end')
+  call :ExportService → :UserRepository: findById(id)  async · impls: InMemoryUserRepository, SqlUserRepository
+  call :ExportService → :ExportBatch: close()
+── Overview
+participants: :ExportService «service» [Application] | :ExportBatch «service» [Application] | export-service «module» [Application] | :UserRepository «interface, repository, seam, port» [Ports]
+found · → :ExportService: exportUser()  ⊖
+  create :ExportService → :ExportBatch: constructor()
+  self :ExportService → :ExportService: write(this.repo, id, batch)  async · ⊖
+    call :ExportService → :UserRepository: findById(id)  async · impls: InMemoryUserRepository, SqlUserRepository
+    call :ExportService → :ExportBatch: add(user?.name ?? id)
+    call :ExportService → export-service: logExport(this, id)  ⊕
+  call :ExportService → :ExportBatch: add('end')
+  call :ExportService → :UserRepository: findById(id)  async · impls: InMemoryUserRepository, SqlUserRepository
+  call :ExportService → :ExportBatch: close()
+── Expand all
+participants: :ExportService «service» [Application] | :ExportBatch «service» [Application] | export-service «module» [Application] | :UserRepository «interface, repository, seam, port» [Ports] | Logger «static»
+found · → :ExportService: exportUser()  ⊖
+  create :ExportService → :ExportBatch: constructor()
+  self :ExportService → :ExportService: write(this.repo, id, batch)  async · ⊖
+    call :ExportService → :UserRepository: findById(id)  async · impls: InMemoryUserRepository, SqlUserRepository
+    call :ExportService → :ExportBatch: add(user?.name ?? id)
+    call :ExportService → export-service: logExport(this, id)  ⊖
+      call export-service → :ExportService: label(id)
+      call export-service → Logger: info(service.label(id))  ⊖
+        self Logger → Logger: write('INFO', message)
+  call :ExportService → :ExportBatch: add('end')
+  call :ExportService → :UserRepository: findById(id)  async · impls: InMemoryUserRepository, SqlUserRepository
+  call :ExportService → :ExportBatch: close()
+⚠ dependency-cycle: Dependency cycle: ExportService → export-service → ExportService
+── class diagram
+class ExportService «service» [Application]: exportUser, write, label
+class ExportBatch «service» [Application]: constructor, add, close
+class export-service «module» [Application]: logExport
+class UserRepository «interface, repository, seam, port» [Ports]: findById
+class Logger «static»: info, write
+association ExportService → UserRepository "repo"
+dependency ExportService → ExportBatch "«create»"
+dependency ExportService → ExportBatch
+dependency ExportService → export-service
+dependency export-service → ExportService
+dependency export-service → Logger
+
+════ method (src/services/shipping-service.ts#ShippingService.ship)
+── opened
+participants: :ShippingService «service» [Application] | ShippingPolicy «static» [Domain]
+found · → :ShippingService: ship()  ⊖
+  call :ShippingService → ShippingPolicy: canShip(user, [{ weightKg }])  ⊕
+── Overview
+participants: :ShippingService «service» [Application] | ShippingPolicy «static» [Domain]
+found · → :ShippingService: ship()  ⊖
+  call :ShippingService → ShippingPolicy: canShip(user, [{ weightKg }])  ⊕
+── Expand all
+participants: :ShippingService «service» [Application] | ShippingPolicy «static» [Domain]
+found · → :ShippingService: ship()  ⊖
+  call :ShippingService → ShippingPolicy: canShip(user, [{ weightKg }])  ⊖
+    self ShippingPolicy → ShippingPolicy: label(tier)
+── class diagram
+class ShippingService «service» [Application]: ship
+class ShippingPolicy «static» [Domain]: canShip, label
+dependency ShippingService → ShippingPolicy
+
+════ method (src/legacy/report.js#ReportGenerator.generate)
+── opened
+participants: :ReportGenerator [Presentation] | :UserService «service» [Application] | format «module» | unknown «unknown»
+found · → :ReportGenerator: generate()  ⊖
+  call :ReportGenerator → :UserService: findUser(id)  async · ⊕
+  call :ReportGenerator → format: formatName(user)  ⊕
+  call :ReportGenerator → unknown: this.printer.print(line)  unresolved: `this.printer` is typed any, so what it calls cannot be known. Give it a type — or, when it is a parameter, open the flow from a caller that passes a typed value: Seqcall follows the argument.
+── Overview
+participants: :ReportGenerator [Presentation] | :UserService «service» [Application] | replica:UserRepository «interface, repository, seam, port» [Ports] | primary:UserRepository «interface, repository, seam, port» [Ports] | format «module» | unknown «unknown»
+found · → :ReportGenerator: generate()  ⊖
+  ↯ throw [!user] Error (leaves findUser)
+  call :ReportGenerator → :UserService: findUser(id)  async · ⊖
+    call :UserService → replica:UserRepository: findById(id)  async · impls: InMemoryUserRepository, SqlUserRepository
+    ↯ return [cached] (leaves findUser)
+    call :UserService → primary:UserRepository: findById(id)  async · impls: InMemoryUserRepository, SqlUserRepository
+  call :ReportGenerator → format: formatName(user)  ⊕
+  call :ReportGenerator → unknown: this.printer.print(line)  unresolved: `this.printer` is typed any, so what it calls cannot be known. Give it a type — or, when it is a parameter, open the flow from a caller that passes a typed value: Seqcall follows the argument.
+── Expand all
+participants: :ReportGenerator [Presentation] | :UserService «service» [Application] | replica:UserRepository «interface, repository, seam, port» [Ports] | primary:UserRepository «interface, repository, seam, port» [Ports] | format «module» | unknown «unknown»
+found · → :ReportGenerator: generate()  ⊖
+  ↯ throw [!user] Error (leaves findUser)
+  call :ReportGenerator → :UserService: findUser(id)  async · ⊖
+    call :UserService → replica:UserRepository: findById(id)  async · impls: InMemoryUserRepository, SqlUserRepository
+    ↯ return [cached] (leaves findUser)
+    call :UserService → primary:UserRepository: findById(id)  async · impls: InMemoryUserRepository, SqlUserRepository
+  call :ReportGenerator → format: formatName(user)  ⊖
+    self format → format: slugify(user.name)
+  call :ReportGenerator → unknown: this.printer.print(line)  unresolved: `this.printer` is typed any, so what it calls cannot be known. Give it a type — or, when it is a parameter, open the flow from a caller that passes a typed value: Seqcall follows the argument.
+── class diagram
+class ReportGenerator [Presentation]: generate
+class UserService «service» [Application]: findUser
+class UserRepository «interface, repository, seam, port» [Ports]: findById
+class format «module»: formatName, slugify
+association ReportGenerator → UserService
+association UserService → UserRepository "primary"
+association UserService → UserRepository "replica"
+dependency ReportGenerator → format
+
+════ method (src/main.ts#<module>.bootstrap)
+── opened
+participants: main «module» [Presentation] | :UserController «controller» [Presentation] | :AdminController «controller» [Presentation] | :UserService «service» [Application] | :SqlUserRepository «repository» [Infrastructure] | :InMemoryUserRepository «repository» [Infrastructure] | :EmailNotifier «notifier» [Infrastructure]
+found · → main: bootstrap()  ⊖
+  create main → :SqlUserRepository: constructor()
+  create main → :InMemoryUserRepository: constructor()
+  create main → :EmailNotifier: constructor()
+  create main → :UserService: constructor(new SqlUserRepository(), new InMemoryUserRepository(), new EmailNotifier())
+  create main → :UserController: constructor(service)
+  create main → :AdminController: constructor(service, billingService)
+── Overview
+participants: main «module» [Presentation] | :UserController «controller» [Presentation] | :AdminController «controller» [Presentation] | :UserService «service» [Application] | :SqlUserRepository «repository» [Infrastructure] | :InMemoryUserRepository «repository» [Infrastructure] | :EmailNotifier «notifier» [Infrastructure]
+found · → main: bootstrap()  ⊖
+  create main → :SqlUserRepository: constructor()
+  create main → :InMemoryUserRepository: constructor()
+  create main → :EmailNotifier: constructor()
+  create main → :UserService: constructor(new SqlUserRepository(), new InMemoryUserRepository(), new EmailNotifier())
+  create main → :UserController: constructor(service)
+  create main → :AdminController: constructor(service, billingService)
+── Expand all
+participants: main «module» [Presentation] | :UserController «controller» [Presentation] | :AdminController «controller» [Presentation] | :UserService «service» [Application] | :SqlUserRepository «repository» [Infrastructure] | :InMemoryUserRepository «repository» [Infrastructure] | :EmailNotifier «notifier» [Infrastructure]
+found · → main: bootstrap()  ⊖
+  create main → :SqlUserRepository: constructor()
+  create main → :InMemoryUserRepository: constructor()
+  create main → :EmailNotifier: constructor()
+  create main → :UserService: constructor(new SqlUserRepository(), new InMemoryUserRepository(), new EmailNotifier())
+  create main → :UserController: constructor(service)
+  create main → :AdminController: constructor(service, billingService)
+── class diagram
+class main «module» [Presentation]: bootstrap
+class UserController «controller» [Presentation]: constructor
+class AdminController «controller» [Presentation]: constructor
+class UserService «service» [Application]: constructor
+class SqlUserRepository «repository» [Infrastructure]: constructor
+class InMemoryUserRepository «repository» [Infrastructure]: constructor
+class EmailNotifier «notifier» [Infrastructure]: constructor
+association UserController → UserService
+association AdminController → UserService "users"
+dependency main → SqlUserRepository "«create»"
+dependency main → InMemoryUserRepository "«create»"
+dependency main → EmailNotifier "«create»"
+dependency main → UserService "«create»"
+dependency main → UserController "«create»"
+dependency main → AdminController "«create»"

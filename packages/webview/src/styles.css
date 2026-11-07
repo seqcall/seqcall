@@ -1,0 +1,3195 @@
+/* Seqcall webview styles. Theme via --vscode-* variables with light/dark fallbacks. */
+
+:root {
+  --fb-fg: #1f2328;
+  --fb-bg: #ffffff;
+  --fb-muted: #656d76;
+  --fb-line: #8c959f;
+  --fb-border: #d0d7de;
+  --fb-box: #f6f8fa;
+  --fb-accent: #0969da;
+  --fb-act: #ddf4ff;
+  --fb-menu: #ffffff;
+  --fb-menu-sel: #0969da;
+  --fb-menu-sel-fg: #ffffff;
+  --fb-btn-hover: rgba(31, 35, 40, 0.08);
+  --fb-toggle-on: rgba(9, 105, 218, 0.14);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fb-fg: #e6edf3;
+    --fb-bg: #0d1117;
+    --fb-muted: #8d96a0;
+    --fb-line: #6e7681;
+    --fb-border: #30363d;
+    --fb-box: #161b22;
+    --fb-accent: #4493f8;
+    --fb-act: #1f3a5f;
+    --fb-menu: #161b22;
+    --fb-menu-sel: #1f6feb;
+    --fb-btn-hover: rgba(230, 237, 243, 0.1);
+    --fb-toggle-on: rgba(68, 147, 248, 0.22);
+  }
+}
+
+/* Dev harness can force a theme with these body classes (VS Code sets them too). */
+body.vscode-light {
+  color-scheme: light;
+}
+body.vscode-dark,
+body.vscode-high-contrast {
+  color-scheme: dark;
+}
+
+.seqcall {
+  --fg: var(--vscode-editor-foreground, var(--fb-fg));
+  --bg: var(--vscode-editor-background, var(--fb-bg));
+  --muted: var(--vscode-descriptionForeground, var(--fb-muted));
+  --line: var(--vscode-editorLineNumber-foreground, var(--fb-line));
+  --border: var(--vscode-editorWidget-border, var(--vscode-panel-border, var(--fb-border)));
+  --box: var(--vscode-editorWidget-background, var(--fb-box));
+  --box-border: var(--vscode-editorWidget-border, var(--fb-line));
+  --accent: var(--vscode-textLink-foreground, var(--fb-accent));
+  --focus: var(--vscode-focusBorder, var(--fb-accent));
+  --act: var(--vscode-editor-selectionHighlightBackground, var(--fb-act));
+  --highlight: var(--vscode-editor-findMatchHighlightBackground, rgba(234, 179, 8, 0.25));
+  --ui-font: var(--vscode-font-family, system-ui, -apple-system, 'Segoe UI', Ubuntu, sans-serif);
+  --mono-font: var(--vscode-editor-font-family, ui-monospace, Menlo, Consolas, 'DejaVu Sans Mono', monospace);
+  /* Layer colours (layers.ts): VS Code chart colours adapt to light/dark/high-contrast. */
+  --layer-1: var(--vscode-charts-blue, #3b82f6);
+  --layer-2: var(--vscode-charts-green, #22a06b);
+  --layer-3: var(--vscode-charts-purple, #8b5cf6);
+  --layer-4: var(--vscode-charts-yellow, #d4a72c);
+  --layer-5: var(--vscode-charts-orange, #e8743b);
+  --layer-6: var(--vscode-charts-red, #e5534b);
+  --layer-7: var(--vscode-terminal-ansiCyan, #1b9aaa);
+
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  color: var(--fg);
+  background: var(--bg);
+  font-family: var(--ui-font);
+  font-size: 13px;
+  user-select: none;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--vscode-editor-background, var(--fb-bg));
+}
+
+/* ───────────── toolbar ───────────── */
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 10px;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--border);
+  background: var(--vscode-editorGroupHeader-tabsBackground, var(--bg));
+  flex: none;
+}
+.toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.toolbar-group + .toolbar-group {
+  padding-left: 10px;
+  border-left: 1px solid var(--border);
+}
+.tb-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 24px;
+  padding: 0 7px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--vscode-foreground, var(--fg));
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.tb-btn.icon-only {
+  width: 26px;
+  justify-content: center;
+  padding: 0;
+}
+.tb-btn:hover:not(:disabled) {
+  background: var(--vscode-toolbar-hoverBackground, var(--fb-btn-hover));
+}
+.tb-btn:focus-visible {
+  outline: 1px solid var(--focus);
+  outline-offset: -1px;
+}
+.tb-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.tb-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+/* FR-14.2: dot on View ▾ when an option differs from its default */
+.tb-dot {
+  display: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.tb-btn.changed .tb-dot {
+  display: inline-block;
+}
+/* FR-14.3 narrow panel: icons only (names stay in the tooltips), tighter spacing */
+.toolbar.compact {
+  gap: 2px 6px;
+  padding: 3px 6px;
+}
+.toolbar.compact .toolbar-group + .toolbar-group {
+  padding-left: 6px;
+}
+.toolbar.compact .tb-btn:not(.keep-label) .tb-label {
+  display: none;
+}
+.toolbar.compact .tb-btn:not(.keep-label):not(.icon-only) {
+  min-width: 26px;
+  padding: 0 5px;
+  justify-content: center;
+}
+.tb-badge:empty {
+  display: none;
+}
+.tb-badge {
+  min-width: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  background: var(--vscode-badge-background, var(--accent));
+  color: var(--vscode-badge-foreground, #fff);
+  font-size: 10px;
+  line-height: 16px;
+  text-align: center;
+  box-sizing: border-box;
+}
+.tb-caret {
+  font-size: 9px;
+  color: var(--muted);
+}
+
+/* ───────────── scroll area / frozen header ───────────── */
+
+.seq-scroll,
+.class-scroll {
+  position: relative;
+  flex: 1;
+  overflow: auto;
+  outline: none;
+  cursor: grab; /* drag-to-pan on the background (pan.ts) */
+}
+.seq-scroll.panning,
+.class-scroll.panning,
+.seq-scroll.panning *,
+.class-scroll.panning * {
+  cursor: grabbing !important;
+  user-select: none;
+}
+.seq-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  min-width: 100%;
+  background: var(--bg);
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+}
+.seq-body {
+  min-width: 100%;
+}
+.seq-header svg,
+.seq-body svg,
+.class-canvas svg {
+  display: block;
+  overflow: visible;
+}
+
+.placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px;
+  text-align: center;
+  color: var(--muted);
+}
+.placeholder[hidden] {
+  display: none;
+}
+/* building a diagram: over the previous one, which stays readable underneath */
+.placeholder.busy {
+  background: color-mix(in srgb, var(--bg) 80%, transparent);
+  z-index: 2;
+}
+.placeholder-title {
+  font-size: 14px;
+}
+/* FR-16.14 a wait: a turning ring above the text */
+.placeholder .spinner {
+  width: 22px;
+  height: 22px;
+  border: 2px solid color-mix(in srgb, var(--muted) 30%, transparent);
+  border-top-color: var(--vscode-progressBar-background, var(--muted));
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .placeholder .spinner {
+    animation-duration: 3s;
+  }
+}
+.placeholder-detail {
+  font-size: 12px;
+  max-width: 60ch;
+  font-family: var(--mono-font);
+  white-space: pre-wrap;
+}
+.placeholder.error .placeholder-title {
+  color: var(--vscode-errorForeground, #cf222e);
+}
+
+/* ───────────── layer colours ───────────── */
+
+.layer-1 { --lc: var(--layer-1); }
+.layer-2 { --lc: var(--layer-2); }
+.layer-3 { --lc: var(--layer-3); }
+.layer-4 { --lc: var(--layer-4); }
+.layer-5 { --lc: var(--layer-5); }
+.layer-6 { --lc: var(--layer-6); }
+.layer-7 { --lc: var(--layer-7); }
+
+/* ───────────── SVG: participants & groups ───────────── */
+
+.group-band {
+  fill: color-mix(in srgb, var(--fg) 4%, transparent);
+  stroke: color-mix(in srgb, var(--fg) 10%, transparent);
+  stroke-width: 1;
+}
+.group-label {
+  font-size: 11px;
+  font-weight: 600;
+  fill: var(--muted);
+  letter-spacing: 0.02em;
+}
+.group[class*='layer-'] .group-band {
+  fill: color-mix(in srgb, var(--lc) 7%, transparent);
+  stroke: color-mix(in srgb, var(--lc) 40%, transparent);
+}
+.group[class*='layer-'] .group-label {
+  fill: color-mix(in srgb, var(--lc) 70%, var(--fg));
+}
+
+.participant {
+  cursor: grab;
+}
+.seqcall.dragging,
+.seqcall.dragging .participant {
+  cursor: grabbing;
+}
+.p-box {
+  fill: var(--box);
+  stroke: var(--box-border);
+  stroke-width: 1;
+}
+.participant:hover .p-box {
+  stroke: var(--focus);
+}
+.participant.kind-interface .p-box,
+.participant.kind-abstract .p-box {
+  stroke-dasharray: 4 2;
+}
+.participant.kind-external .p-box,
+.participant.kind-unknown .p-box {
+  fill: transparent;
+  stroke: color-mix(in srgb, var(--line) 70%, transparent);
+}
+.participant.faded {
+  opacity: 0.38;
+}
+.participant.created-head {
+  cursor: pointer;
+}
+.p-label {
+  font-size: 13px;
+  font-weight: 600;
+  fill: var(--fg);
+}
+.participant.kind-interface .p-label,
+.participant.kind-abstract .p-label {
+  font-style: italic;
+}
+.p-stereo {
+  font-size: 11px;
+  font-style: italic;
+  fill: var(--muted);
+}
+.p-hint {
+  font-size: 11px;
+  font-style: italic;
+  fill: var(--accent);
+}
+
+.lifeline {
+  stroke: var(--line);
+  stroke-width: 1;
+  stroke-dasharray: 4 4;
+  opacity: 0.7;
+}
+.activation {
+  fill: var(--act);
+  stroke: var(--line);
+  stroke-width: 1;
+}
+.activation.nav {
+  cursor: pointer;
+}
+.activation.nav:hover {
+  stroke: var(--accent);
+}
+
+/* ───────────── SVG: combined fragments (FR-1.10) ───────────── */
+
+/* FR-1.10 frames are tinted areas in their kind's colour (calls stay solid lines in the text colour):
+   the kind is readable from the colour as well as from the word before every guard */
+.fragment,
+.guard-ghost-item {
+  --frag-c: var(--muted);
+}
+:is(.fragment, .guard-ghost-item).kind-loop {
+  --frag-c: var(--vscode-charts-blue, #2563eb);
+}
+:is(.fragment, .guard-ghost-item).kind-alt,
+:is(.fragment, .guard-ghost-item).kind-opt {
+  --frag-c: var(--vscode-charts-purple, #9333ea);
+}
+:is(.fragment, .guard-ghost-item).kind-try {
+  --frag-c: var(--vscode-charts-red, #dc2626);
+}
+:is(.fragment, .guard-ghost-item).kind-callback {
+  --frag-c: var(--vscode-charts-green, #0d9488);
+}
+.frag-frame {
+  fill: color-mix(in srgb, var(--frag-c) 4%, transparent);
+  stroke: color-mix(in srgb, var(--frag-c) 55%, transparent);
+  stroke-width: 1;
+  pointer-events: none;
+}
+.frag-sep {
+  stroke: color-mix(in srgb, var(--frag-c) 55%, transparent);
+  stroke-width: 1;
+  stroke-dasharray: 1 2;
+  pointer-events: none;
+}
+.frag-kind {
+  font-family: var(--ui-font);
+  font-size: 10px;
+  font-weight: 600;
+  fill: var(--frag-c);
+}
+.frag-tag {
+  cursor: pointer;
+}
+.frag-tag-bg {
+  fill: color-mix(in srgb, var(--frag-c) 14%, var(--bg));
+  stroke: color-mix(in srgb, var(--frag-c) 55%, transparent);
+  stroke-width: 1;
+}
+.frag-tag:hover .frag-tag-bg {
+  fill: color-mix(in srgb, var(--focus) 14%, var(--bg));
+}
+.frag-tag-text {
+  font-family: var(--ui-font);
+  font-size: 10px;
+  font-weight: 600;
+  fill: var(--fg);
+}
+.frag-guard {
+  font-family: var(--mono-font);
+  font-size: 11px;
+  fill: var(--muted);
+  cursor: pointer;
+}
+.frag-guard:hover {
+  fill: var(--accent);
+  text-decoration: underline;
+}
+/* FR-1.17 what a catch does with the error; swallowed = a warning */
+.frag-outcome {
+  font-family: var(--ui-font);
+  font-size: 10px;
+  font-style: italic;
+  fill: var(--muted);
+}
+.frag-outcome.swallowed {
+  fill: var(--warn, #b26b00);
+  font-weight: 600;
+}
+/* FR-1.12: minimize / restore — quiet until pointed at, so frames stay uncluttered */
+.frag-toggle {
+  opacity: 0.45;
+  cursor: pointer; /* like the message expand/collapse glyphs (not the background's pan cursor) */
+}
+.fragment:hover .frag-toggle,
+.fragment.collapsed .frag-toggle {
+  opacity: 1;
+}
+.fragment.collapsed .frag-frame {
+  stroke-dasharray: 2 2;
+}
+.frag-summary {
+  font-family: var(--ui-font);
+  font-size: 11px;
+  fill: var(--muted);
+  cursor: pointer;
+}
+.frag-summary:hover {
+  fill: var(--accent);
+}
+
+/* ───────────── SVG: messages ───────────── */
+
+.message {
+  cursor: pointer;
+}
+.msg-line {
+  fill: none;
+  stroke: var(--fg);
+  stroke-width: 1.2;
+}
+.msg-line.dashed {
+  stroke-dasharray: 6 4;
+}
+.msg-hit {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 12;
+}
+.msg-hit-label {
+  fill: transparent;
+}
+.msg-highlight {
+  fill: transparent;
+  stroke: none;
+}
+.msg-label-bg {
+  fill: var(--bg);
+  pointer-events: none;
+}
+.message:hover .msg-label-bg {
+  fill: color-mix(in srgb, var(--focus) 8%, var(--bg));
+}
+.message.highlighted .msg-label-bg {
+  fill: transparent;
+}
+.message:hover .msg-highlight {
+  fill: color-mix(in srgb, var(--focus) 8%, transparent);
+}
+/* FR-9.9 the message the keyboard walks from: dashed, so the Find / editor highlight still shows on top */
+.message.kb-selected .msg-highlight {
+  fill: color-mix(in srgb, var(--focus) 10%, transparent);
+  stroke: var(--focus);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 3;
+}
+.message.highlighted .msg-highlight {
+  fill: var(--highlight);
+  stroke: var(--focus);
+  stroke-width: 1.5;
+}
+.arrow-head {
+  fill: var(--fg);
+}
+.arrow-open {
+  stroke: var(--fg);
+  stroke-width: 1.2;
+}
+.arrow-head.muted {
+  fill: var(--muted);
+}
+.arrow-open.muted {
+  stroke: var(--muted);
+}
+.found-gate {
+  fill: var(--fg);
+}
+.seg-name {
+  font-size: 12px;
+  font-weight: 600;
+  fill: var(--fg);
+}
+/* FR-5.11 ↑ before an inherited method: a drawn arrow, muted; the glyph text is kept invisible (find, copy) */
+.seg-inherited path {
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.seg-inherited-text {
+  font-size: 12px;
+  fill: transparent;
+}
+.seg-args {
+  font-size: 11px;
+  font-family: var(--mono-font);
+  fill: var(--muted);
+}
+/* FR-32.2 the outcome of an entry point's flow, on its arrow: muted, in the I/O colour */
+.seg-outcome {
+  font-size: 11px;
+  font-family: var(--mono-font);
+  fill: var(--io);
+  opacity: 0.85;
+}
+.seg-result {
+  font-size: 11px;
+  font-family: var(--mono-font);
+  fill: var(--muted);
+  opacity: 0.85;
+}
+.seg-prefix,
+.seg-marker {
+  font-size: 10px;
+  font-weight: 500;
+  fill: var(--muted);
+}
+.seg-recursive {
+  font-size: 11px;
+  fill: var(--accent);
+}
+/* FR-28 the `+n` pill of a zoomed call: the calls folded inside the layer */
+.folded-badge rect {
+  fill: color-mix(in srgb, var(--muted) 18%, transparent);
+  stroke: none;
+}
+.folded-badge.has-collapsed rect {
+  stroke: var(--accent);
+  stroke-width: 1;
+}
+/* FR-24.9 changes of the branch folded in here: a step of the review */
+.folded-badge.has-changes rect {
+  stroke: var(--diff-changed);
+  stroke-width: 1.2;
+}
+.seg-folded {
+  font-size: 10px;
+  font-weight: 500;
+  fill: var(--muted);
+}
+/* FR-28.7 ⊕ on a layer lifeline (opens it in place), as the expand glyph */
+.layer-open {
+  cursor: pointer;
+}
+.layer-open circle {
+  fill: var(--vscode-editor-background, #fff);
+  stroke: var(--muted);
+  stroke-width: 1.2;
+}
+.layer-open line {
+  stroke: var(--muted);
+  stroke-width: 1.4;
+}
+.layer-open:hover circle,
+.layer-open:hover line {
+  stroke: var(--accent);
+}
+/* FR-28.7 ⊕ on a layer lifeline (opens it in place), as the expand glyph */
+.layer-open {
+  cursor: pointer;
+}
+.layer-open circle {
+  fill: var(--vscode-editor-background, #fff);
+  stroke: var(--muted);
+  stroke-width: 1.2;
+}
+.layer-open line {
+  stroke: var(--muted);
+  stroke-width: 1.4;
+}
+.layer-open:hover circle,
+.layer-open:hover line {
+  stroke: var(--accent);
+}
+.message.library .msg-line {
+  stroke: var(--muted);
+  stroke-width: 1;
+}
+.message.library .seg-name {
+  font-weight: 400;
+  fill: var(--muted);
+}
+.message.library .seg-args {
+  opacity: 0.8;
+}
+/* FR-3.6: low-importance calls after a smart expand (still clickable; full opacity on hover). */
+.message.low .msg-line,
+.message.low text,
+.message.low .expand-glyph {
+  opacity: 0.4;
+}
+.message.low:hover .msg-line,
+.message.low:hover text,
+.message.low:hover .expand-glyph,
+.message.low.highlighted .msg-line,
+.message.low.highlighted text {
+  opacity: 1;
+}
+
+.expand-glyph circle {
+  fill: var(--bg);
+  stroke: var(--accent);
+  stroke-width: 1.2;
+}
+.expand-glyph line {
+  stroke: var(--accent);
+  stroke-width: 1.4;
+}
+.expand-glyph:hover circle {
+  fill: var(--accent);
+}
+.expand-glyph:hover line {
+  stroke: var(--bg);
+}
+/* FR-11.7 ⊡ folded by a "don't expand" filter: muted square, a dot inside */
+.expand-glyph.no-expand rect {
+  fill: var(--bg);
+  stroke: var(--muted);
+  stroke-width: 1.2;
+}
+.expand-glyph.no-expand circle.dot {
+  fill: var(--muted);
+  stroke: none;
+}
+.expand-glyph.no-expand:hover rect {
+  fill: var(--muted);
+}
+.expand-glyph.no-expand:hover circle.dot {
+  fill: var(--bg);
+}
+
+.poly-badge rect {
+  fill: color-mix(in srgb, var(--accent) 12%, transparent);
+  stroke: color-mix(in srgb, var(--accent) 50%, transparent);
+  stroke-width: 1;
+}
+.poly-badge .seg-marker {
+  fill: var(--accent);
+}
+.poly-badge.selected rect {
+  fill: transparent;
+  stroke-dasharray: 2 2;
+}
+.poly-badge:hover rect {
+  fill: color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+/* ───────────── menus & popovers ───────────── */
+
+.popup-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+.popup-layer > * {
+  pointer-events: auto;
+  position: fixed;
+}
+.menu,
+.callers-panel {
+  min-width: 180px;
+  padding: 4px 0;
+  background: var(--vscode-menu-background, var(--fb-menu));
+  color: var(--vscode-menu-foreground, var(--fg));
+  border: 1px solid var(--vscode-menu-border, var(--border));
+  border-radius: 6px;
+  box-shadow: 0 4px 16px var(--vscode-widget-shadow, rgba(0, 0, 0, 0.18));
+  font-size: 12px;
+}
+.menu-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 4px;
+  padding: 4px 10px 4px 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.menu-item:hover:not(.disabled),
+.menu-item.open {
+  background: var(--vscode-menu-selectionBackground, var(--fb-menu-sel));
+  color: var(--vscode-menu-selectionForeground, var(--fb-menu-sel-fg));
+}
+.menu-item.disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.menu-check {
+  width: 14px;
+  text-align: center;
+  flex: none;
+}
+.menu-label {
+  flex: 1;
+}
+.menu-hint {
+  margin-left: 16px;
+  opacity: 0.7;
+  font-size: 11px;
+}
+.menu-arrow {
+  margin-left: 12px;
+}
+.menu-separator {
+  height: 1px;
+  margin: 4px 8px;
+  background: var(--vscode-menu-separatorBackground, var(--border));
+}
+.submenu {
+  display: none;
+  position: absolute;
+  left: 100%;
+  top: -5px;
+  color: var(--vscode-menu-foreground, var(--fg));
+}
+.menu-item.open > .submenu {
+  display: block;
+}
+/* no room on the right: opens to the left of its row */
+.submenu.flip {
+  left: auto;
+  right: 100%;
+}
+
+.callers-panel {
+  max-width: min(520px, 90vw);
+  padding: 6px;
+  user-select: text;
+}
+.callers-title {
+  padding: 2px 6px 6px;
+  font-weight: 600;
+}
+.callers-title .code {
+  font-family: var(--mono-font);
+}
+.caller-tag {
+  font-size: 10px;
+  padding: 0 4px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+}
+.caller-item.in-test .caller-name {
+  color: var(--muted);
+}
+.callers-tests {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px 2px;
+  border-top: 1px solid var(--line);
+  font-size: 11px;
+  color: var(--muted);
+  cursor: pointer;
+}
+.callers-status {
+  padding: 6px;
+  color: var(--muted);
+}
+.callers-list {
+  display: flex;
+  flex-direction: column;
+  max-height: 50vh;
+  overflow: auto;
+}
+.caller-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 5px 6px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.caller-item:hover,
+.caller-item:focus-visible {
+  background: var(--vscode-list-hoverBackground, var(--fb-btn-hover));
+  outline: none;
+}
+.caller-head {
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+}
+.caller-name {
+  font-weight: 600;
+}
+.caller-loc {
+  color: var(--muted);
+  font-size: 11px;
+}
+.caller-preview {
+  font-family: var(--mono-font);
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ───────────── class diagram ───────────── */
+
+.class-node {
+  cursor: pointer;
+}
+.cls-box {
+  fill: var(--box);
+  stroke: var(--box-border);
+  stroke-width: 1;
+}
+.class-node:hover .cls-box {
+  stroke: var(--focus);
+}
+.class-node.kind-interface .cls-box {
+  stroke-dasharray: 4 2;
+}
+.layer-hint-flag {
+  font-size: 12px;
+  fill: var(--lc, var(--muted));
+  cursor: help;
+}
+.cls-more {
+  font-size: 11px;
+  font-style: italic;
+  fill: var(--muted);
+  cursor: pointer;
+}
+.cls-more:hover {
+  fill: var(--accent);
+  text-decoration: underline;
+}
+.lane-band {
+  fill: color-mix(in srgb, var(--fg) 3%, transparent);
+  stroke: color-mix(in srgb, var(--fg) 10%, transparent);
+}
+.class-lane[class*='layer-'] .lane-band {
+  fill: color-mix(in srgb, var(--lc) 6%, transparent);
+  stroke: color-mix(in srgb, var(--lc) 35%, transparent);
+}
+.lane-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  fill: var(--muted);
+}
+.class-lane[class*='layer-'] .lane-label {
+  fill: color-mix(in srgb, var(--lc) 70%, var(--fg));
+}
+.class-svg .class-node,
+.class-svg .relation {
+  transition: opacity 120ms ease;
+}
+.class-svg.has-focus .class-node:not(.focused),
+.class-svg.has-focus .relation:not(.focused),
+.class-svg.has-focus .class-lane {
+  opacity: 0.22;
+}
+.class-svg.has-focus .relation.focused .rel-line {
+  stroke-width: 2;
+}
+/* Wider invisible hit area so thin edges are easy to hover. */
+.rel-hit {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 10;
+  cursor: pointer;
+}
+.tb-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.tb-select {
+  font: inherit;
+  font-size: 12px;
+  color: var(--fg);
+  background: var(--vscode-dropdown-background, var(--bg));
+  border: 1px solid var(--vscode-dropdown-border, var(--border));
+  border-radius: 3px;
+  padding: 1px 4px;
+}
+.relation.violation .rel-line {
+  stroke: var(--vscode-errorForeground, #e5534b);
+  stroke-width: 2;
+}
+.relation.violation .rel-label {
+  fill: var(--vscode-errorForeground, #e5534b);
+}
+/* FR-19.17 a call that breaks the dependency rule: red as the class diagram's violating relation */
+.message.violates .msg-line {
+  stroke: var(--vscode-errorForeground, #e5534b);
+  stroke-width: 2;
+}
+/* FR-7.16 a possible violation (it rests on a guessed layer): amber, in both diagrams (not dashed: a dashed line is a
+   return or a dependency in UML) */
+.relation.violation.possible .rel-line,
+.relation.rel-use.violation.possible .rel-line,
+.message.violates.possible .msg-line {
+  stroke: var(--warn, #d97706);
+}
+.relation.violation.possible .rel-label {
+  fill: var(--warn, #d97706);
+}
+.relation.violation.possible .cls-diamond {
+  stroke: var(--warn, #d97706);
+}
+.layer-violations {
+  color: var(--vscode-errorForeground, #e5534b);
+  font-weight: 600;
+}
+button.layer-violations {
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  font: inherit;
+  font-weight: 600;
+  padding: 0 6px;
+  cursor: pointer;
+}
+button.layer-violations:hover,
+button.layer-violations:focus-visible {
+  border-color: color-mix(in srgb, var(--vscode-errorForeground, #e5534b) 60%, transparent);
+  outline: none;
+}
+.cls-layer-head {
+  fill: color-mix(in srgb, var(--lc) 15%, var(--box));
+}
+.cls-layer-bar {
+  fill: var(--lc);
+}
+/* a folder in several layers: one piece per layer */
+.pkg-split-part {
+  fill: var(--lc);
+}
+.pkg-split-part.no-layer {
+  fill: var(--muted);
+  opacity: 0.5;
+}
+.layer-legend {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: 8px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.layer-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.layer-chip::before {
+  content: '';
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  background: var(--lc);
+}
+.cls-sep {
+  stroke: var(--box-border);
+  stroke-width: 1;
+}
+.cls-stereo {
+  font-size: 11px;
+  font-style: italic;
+  fill: var(--muted);
+}
+.cls-name {
+  font-size: 13px;
+  font-weight: 700;
+  fill: var(--fg);
+}
+.cls-name.abstract {
+  font-style: italic;
+}
+.cls-member {
+  fill: var(--fg);
+}
+/* Same look as sequence message labels (.seg-name / .seg-args). */
+.cls-m-name {
+  font-size: 12px;
+  font-weight: 600;
+  fill: var(--fg);
+}
+.cls-m-sig {
+  font-size: 11px;
+  font-family: var(--mono-font);
+  fill: var(--muted);
+}
+.cls-member.static {
+  text-decoration: underline;
+}
+.rel-line {
+  fill: none;
+  stroke: var(--fg);
+  stroke-width: 1.1;
+}
+.rel-line.dashed {
+  stroke-dasharray: 6 4;
+}
+/* FR-12.12: a type use (no call) is a lighter, dotted dependency. */
+.relation.rel-use .rel-line {
+  stroke: var(--muted);
+  stroke-width: 1;
+  stroke-dasharray: 2 3;
+}
+.relation.rel-use.violation .rel-line {
+  stroke: var(--vscode-errorForeground, #e5534b);
+  stroke-width: 1.6;
+}
+/* A class that is only referenced (no calls in the interaction): dashed outline. */
+.class-node.used-only .cls-box {
+  stroke-dasharray: 1 2;
+}
+/* FR-7.15 a class that only holds data («data») stays in its layer but steps back: the classes with logic stand out. */
+.class-node.data-only {
+  opacity: 0.6;
+}
+.class-svg.has-focus .class-node.data-only.focused {
+  opacity: 1;
+}
+/* FR-26 codebase map: folders as UML packages (tab on the top edge); a folder beside the one shown is dashed context. */
+.class-node.package .pkg-tab {
+  fill: var(--bg);
+  stroke: var(--fg);
+  stroke-width: 1;
+}
+.class-node.package .pkg-name,
+.class-node.package .pkg-class {
+  cursor: pointer;
+}
+.class-node.package .pkg-name:hover,
+.class-node.package .pkg-class:hover {
+  text-decoration: underline;
+}
+.class-node.package .pkg-count.has-violations {
+  fill: var(--vscode-errorForeground, #e5534b);
+}
+/* FR-26.6 a layer violation between two of its classes: the package is outlined red (open it to see the edge) */
+/* FR-26.7 ⊖ ‹package› above a box shown from an open package */
+.fold-tag {
+  cursor: pointer;
+}
+.fold-tag-text {
+  fill: var(--muted);
+  font-size: 10px;
+}
+.fold-tag:hover .fold-tag-text {
+  fill: var(--fg);
+  text-decoration: underline;
+}
+/* FR-28.7 / 27.8 the ⊖ of an opened class and of a lane are buttons, not part of the pannable background (grab hand) */
+.class-node .pkg-expand,
+.class-lane .lane-fold {
+  cursor: pointer;
+}
+.class-lane .lane-fold {
+  fill: var(--muted);
+  font-size: 13px;
+}
+.class-lane .lane-fold:hover {
+  fill: var(--accent);
+}
+.class-node.package .pkg-expand {
+  fill: var(--muted);
+  font-size: 13px;
+  cursor: pointer;
+}
+.class-node.package:hover .pkg-expand {
+  fill: var(--fg);
+}
+.app-open {
+  display: flex;
+  gap: 4px;
+  min-width: 0;
+  overflow: hidden;
+}
+.app-fold {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--fg) 6%, transparent);
+  color: var(--fg);
+  font: inherit;
+  font-size: 11px;
+  padding: 0 7px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.class-node.package.has-violations .cls-box {
+  stroke: var(--vscode-errorForeground, #e5534b);
+  stroke-width: 1.6;
+}
+.class-node.package.external {
+  opacity: 0.72;
+}
+.class-node.package.external .cls-box,
+.class-node.package.external .pkg-tab {
+  stroke-dasharray: 4 3;
+}
+/* an edge merging many relations is a little thicker (--rel-width set per edge) */
+.relation[style] .rel-line {
+  stroke-width: var(--rel-width, 1.1);
+}
+.cls-triangle {
+  fill: var(--bg);
+  stroke: var(--fg);
+  stroke-width: 1.1;
+}
+.cls-arrow {
+  stroke: var(--fg);
+  stroke-width: 1.1;
+}
+/* FR-12.15 aggregation: hollow diamond at the owner, multiplicity at the target */
+.cls-diamond {
+  fill: var(--bg);
+  stroke: var(--fg);
+  stroke-width: 1.2;
+}
+.relation.violation .cls-diamond {
+  stroke: var(--vscode-errorForeground, #e5534b);
+}
+.rel-mult {
+  font-size: 11px;
+  font-weight: 600;
+  fill: var(--fg);
+  paint-order: stroke;
+  stroke: var(--bg);
+  stroke-width: 3px;
+  pointer-events: none;
+}
+.rel-label {
+  font-size: 11px;
+  font-style: italic;
+  fill: var(--muted);
+  cursor: pointer; /* clickable like the line (FR-12.9) */
+  paint-order: stroke;
+  stroke: var(--bg);
+  stroke-width: 4px;
+  stroke-linejoin: round;
+}
+
+/* ───────────── dev harness ───────────── */
+
+.dev-log {
+  position: fixed;
+  right: 8px;
+  bottom: 8px;
+  z-index: 20;
+  width: 340px;
+  max-height: 30vh;
+  overflow: auto;
+  padding: 6px 8px;
+  border: 1px solid var(--vscode-editorWidget-border, var(--fb-border));
+  border-radius: 6px;
+  background: var(--vscode-editorWidget-background, var(--fb-box));
+  color: var(--vscode-editor-foreground, var(--fb-fg));
+  font: 11px ui-monospace, Menlo, Consolas, monospace;
+  opacity: 0.92;
+}
+.dev-log-row {
+  white-space: pre-wrap;
+  word-break: break-all;
+  border-bottom: 1px dashed var(--vscode-editorWidget-border, var(--fb-border));
+  padding: 2px 0;
+}
+
+/* ───────────── zoom controls ───────────── */
+
+.tb-zoom-label {
+  min-width: 44px;
+  justify-content: center;
+  font-variant-numeric: tabular-nums;
+}
+/* Zoom: a small cluster floating over the bottom-right corner of the canvas (clear of the scrollbar). */
+.zoom-float {
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 1px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--vscode-editorWidget-background, var(--bg));
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+  opacity: 0.72;
+  transition: opacity 0.12s;
+}
+.zoom-float:hover,
+.zoom-float:focus-within {
+  opacity: 1;
+}
+.zoom-float .tb-btn {
+  height: 22px;
+}
+.zoom-float .tb-zoom-label {
+  min-width: 40px;
+  padding: 0 2px;
+  font-size: 11px;
+}
+.zoom-group .icon-only .tb-label {
+  font-size: 15px;
+  line-height: 1;
+}
+
+/* FR-1.15 early exits: small muted markers next to the activation bar. */
+.exit-marker {
+  cursor: pointer;
+}
+.exit-hit {
+  fill: transparent;
+}
+.exit-text {
+  font-size: 10px;
+  fill: var(--muted);
+}
+.exit-marker.kind-throw .exit-text {
+  fill: var(--vscode-errorForeground, #cf222e);
+  opacity: 0.75;
+}
+.exit-marker:hover .exit-text {
+  fill: var(--accent);
+  opacity: 1;
+}
+/* FR-3.11 a catch whose try frame Smart dropped, when it swallows the error: the warning of FR-1.17 */
+.exit-marker.swallowed .exit-text {
+  fill: var(--warn, #b26b00);
+  font-weight: 600;
+}
+/* FR-3.11 what is left of an error branch Smart folded: "⊕ 2 calls" */
+.error-fold {
+  font-size: 10px;
+  fill: var(--muted);
+  cursor: pointer;
+}
+.error-fold:hover {
+  fill: var(--accent);
+}
+
+/* Hover card of a message (styled replacement for the native tooltip). */
+.hover-card {
+  position: fixed;
+  z-index: 50;
+  max-width: 520px;
+  padding: 5px 8px 6px;
+  border: 1px solid var(--vscode-editorWidget-border, var(--fb-border));
+  border-radius: 4px;
+  background: var(--vscode-editorWidget-background, var(--fb-box));
+  color: var(--fg);
+  box-shadow: 0 2px 8px var(--vscode-widget-shadow, rgba(0, 0, 0, 0.18));
+  font-family: var(--ui-font);
+  font-size: 12px;
+  line-height: 1.35;
+  pointer-events: none;
+  user-select: text;
+}
+/* FR-9.6 who calls whom: participant chips with their layer colour */
+.hover-card .hc-route {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 3px;
+  font-size: 11px;
+}
+.hover-card .hc-chip {
+  padding: 0 5px;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--lc, var(--muted));
+  border-radius: 3px;
+  background: var(--box);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.hover-card .hc-arrow {
+  color: var(--muted);
+  white-space: nowrap;
+}
+/* FR-28.10 zoomed to layers: the object, its layer lifeline's name under it */
+.hover-card .hc-end {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+}
+.hover-card .hc-layer {
+  padding-left: 4px;
+  color: var(--muted);
+  font-size: 10px;
+  white-space: nowrap;
+}
+.hover-card.interactive .hc-chip[data-pull],
+.hover-card.interactive .hc-layer[data-jump] {
+  cursor: pointer;
+}
+.hover-card.interactive .hc-chip[data-pull]:hover {
+  border-color: var(--accent);
+  text-decoration: underline;
+}
+.hover-card.interactive .hc-layer[data-jump]:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+/* FR-9.7 the sequence view's card takes clicks: a chip scrolls to that object */
+.hover-card.interactive {
+  pointer-events: auto;
+}
+.hover-card.interactive .hc-chip[data-jump] {
+  cursor: pointer;
+}
+.hover-card.interactive .hc-chip[data-jump]:hover {
+  border-color: var(--accent);
+  text-decoration: underline;
+}
+.hover-card .hc-keys {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 10.5px;
+}
+/* FR-9.7 the message the keys work on after a jump (until the mouse moves) */
+.message.jump-active .msg-highlight {
+  fill: var(--highlight);
+  stroke: var(--accent);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 3;
+}
+/* FR-9.7 the object just jumped to */
+.participant.jump-target .p-box {
+  stroke: var(--accent);
+  stroke-width: 3;
+}
+/* the sender / receiver of the hovered message in the frozen header */
+.participant.hover-end .p-box {
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+.hover-card .hc-call {
+  font-family: var(--mono-font);
+  overflow-wrap: anywhere;
+}
+.hover-card .hc-note {
+  color: var(--muted);
+  font-size: 11px;
+}
+.hover-card .hc-imp-head {
+  margin-top: 4px;
+  padding-top: 3px;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 600;
+}
+.hover-card .hc-imp {
+  color: var(--muted);
+  font-size: 10.5px;
+}
+
+/* FR-32.2 the outcome in the entry point's card: a class per kind, its calls below it (a click opens one) */
+.hover-card .hc-outcome-call {
+  padding-left: 12px;
+  font-family: var(--mono-font);
+}
+.hover-card .hc-outcome-call[data-nav] {
+  cursor: pointer;
+}
+.hover-card .hc-outcome-call[data-nav]:hover {
+  color: var(--fg);
+  text-decoration: underline;
+}
+
+/* FR-16.2 entry points */
+.placeholder-action {
+  margin-top: 10px;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--box);
+  color: var(--fg);
+  font: inherit;
+  cursor: pointer;
+}
+.placeholder-action:hover {
+  border-color: var(--focus);
+}
+.entry-points-panel {
+  display: flex;
+  flex-direction: column;
+  width: min(620px, calc(100vw - 40px));
+  max-height: min(520px, calc(100vh - 80px));
+  padding: 6px 0 4px;
+  border: 1px solid var(--vscode-menu-border, var(--border));
+  border-radius: 5px;
+  background: var(--vscode-menu-background, var(--fb-menu));
+  color: var(--vscode-menu-foreground, var(--fg));
+  box-shadow: 0 4px 14px var(--vscode-widget-shadow, rgba(0, 0, 0, 0.18));
+  font-size: 12px;
+}
+.ep-title {
+  padding: 0 10px 5px;
+  font-weight: 600;
+}
+.ep-project {
+  color: var(--muted);
+  font-weight: 400;
+}
+/* FR-16.11 the project name switches the project */
+.ep-switch-project {
+  border: none;
+  border-radius: 3px;
+  background: none;
+  font: inherit;
+  padding: 0 4px;
+  margin-left: 2px;
+  cursor: pointer;
+}
+.ep-switch-project:hover {
+  color: var(--fg);
+  background: color-mix(in srgb, var(--fg) 10%, transparent);
+}
+.ep-search {
+  margin: 0 10px 6px;
+  padding: 3px 6px;
+  border: 1px solid var(--vscode-dropdown-border, var(--border));
+  border-radius: 3px;
+  background: var(--vscode-dropdown-background, var(--bg));
+  color: var(--fg);
+  font: inherit;
+}
+.ep-list {
+  overflow-y: auto;
+}
+.ep-group,
+/* FR-16.5 a file's module-level calls, under the file */
+.ep-item.ep-nested {
+  padding-left: 22px;
+}
+.ep-item.ep-file .ep-label {
+  font-weight: 600;
+}
+.ep-item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  width: 100%;
+  padding: 3px 10px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+/* a plain row like the entries (the button's own border and background stuck out to the left) */
+.ep-group {
+  display: block;
+  width: 100%;
+  padding: 3px 10px;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+/* the tests: set apart below the production entry points, quieter (folded until opened) */
+.ep-group[data-group='test'] {
+  margin-top: 10px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
+  font-weight: 400;
+  opacity: 0.75;
+}
+.ep-count {
+  font-weight: 400;
+}
+.ep-item:hover,
+.ep-group:hover {
+  background: var(--vscode-list-hoverBackground, var(--fb-btn-hover));
+}
+.ep-verb {
+  flex: none;
+  min-width: 44px;
+  font-family: var(--mono-font);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--accent);
+}
+.ep-verb.verb-post { color: var(--layer-2); }
+.ep-verb.verb-put,
+.ep-verb.verb-patch { color: var(--layer-4); }
+.ep-verb.verb-delete { color: var(--layer-6); }
+.ep-label {
+  font-family: var(--mono-font);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* FR-32.4 the I/O of an entry point's whole flow, once known (the I/O pill's look) */
+.ep-io {
+  flex: none;
+  margin-left: 6px;
+  padding: 0 4px;
+  border: 1px solid var(--io);
+  border-radius: 3px;
+  color: var(--io);
+  font-size: 8.5px;
+  font-weight: 700;
+  line-height: 12px;
+  letter-spacing: 0.02em;
+}
+.ep-method {
+  margin-left: auto;
+  flex: none;
+  max-width: 45%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--muted);
+  font-size: 11px;
+}
+.ep-status,
+.ep-more {
+  padding: 4px 10px;
+  color: var(--muted);
+}
+.ep-status.error {
+  color: var(--vscode-errorForeground, #cf222e);
+}
+
+/* ───────────── FR-17 I/O badges ───────────── */
+
+.seqcall {
+  --io: var(--vscode-charts-orange, #d97706);
+}
+.io-badge rect {
+  fill: color-mix(in srgb, var(--io) 14%, var(--bg));
+  stroke: color-mix(in srgb, var(--io) 60%, transparent);
+  stroke-width: 1;
+}
+.io-badge.below rect {
+  fill: var(--bg);
+  stroke-dasharray: 2 1.5;
+}
+.io-text {
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  fill: var(--io);
+}
+.participant-io {
+  cursor: help;
+}
+
+/* FR-12.13 method rows: click = go to the method (and show its calls), right-click = focus / show calls */
+.class-node .cls-member {
+  cursor: pointer;
+}
+.class-node .cls-member:hover {
+  fill: var(--accent);
+}
+
+/* FR-16.3 entry point tag at the gate of the found message */
+.entry-badge rect {
+  fill: color-mix(in srgb, var(--accent) 12%, var(--bg));
+  stroke: color-mix(in srgb, var(--accent) 55%, transparent);
+  stroke-width: 1;
+}
+.entry-badge .entry-text {
+  font-size: 10px;
+  font-weight: 600;
+  fill: var(--accent);
+}
+/* the DI container's setup step before the entry point: quiet, not an entry */
+.entry-badge.kind-setup rect {
+  fill: transparent;
+  stroke: var(--muted);
+  stroke-dasharray: 2 2;
+}
+.entry-badge.kind-setup .entry-text {
+  fill: var(--muted);
+}
+.entry-badge.kind-test rect {
+  fill: color-mix(in srgb, var(--muted) 12%, var(--bg));
+  stroke: color-mix(in srgb, var(--muted) 55%, transparent);
+}
+.entry-badge.kind-test .entry-text {
+  fill: var(--muted);
+}
+
+/* FR-3.3 notice: Expand all stopped at a limit */
+.expand-notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--accent) 8%, var(--bg));
+  font-size: 12px;
+  flex: none;
+}
+.expand-notice[hidden] {
+  display: none;
+}
+.expand-notice .notice-text {
+  color: var(--fg);
+}
+.expand-notice .notice-btn,
+.layer-reason-card .notice-btn,
+.expand-notice .notice-close {
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--accent);
+  font: inherit;
+  font-size: 11px;
+  padding: 1px 6px;
+  cursor: pointer;
+}
+.expand-notice .notice-close {
+  margin-left: auto;
+  border: none;
+  color: var(--muted);
+}
+.toolbar [data-cmd='expandMenu'] {
+  width: 16px;
+  margin-left: -2px;
+}
+
+/* a design issue's mark at its evidence (glyph of its kind; hover = title, click = card) */
+.finding-mark {
+  fill: var(--vscode-editorWarning-foreground, #bf8803);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.finding-mark:hover {
+  fill: var(--fg);
+}
+/* FR-19 design findings */
+.seqcall {
+  --warn: var(--vscode-editorWarning-foreground, #d97706);
+}
+.tb-btn[data-cmd='findings'] {
+  color: var(--warn);
+}
+/* FR-19.17 ⚠ N / ⇄ N: icon, count and caret, tight */
+.tb-btn.tb-count {
+  gap: 3px;
+  padding: 0 5px;
+}
+.tb-btn[data-cmd='findings'] .tb-badge {
+  background: var(--warn);
+}
+/* ⚠ N +m: issues inside folded calls, beside the count */
+.tb-more {
+  font-size: 10px;
+  color: var(--muted);
+}
+.tb-more:empty {
+  display: none;
+}
+/* ⚠ with nothing to show: still findable, but quiet — grey, not warning-coloured */
+.tb-btn.tb-count.tb-zero {
+  opacity: 0.55;
+  color: var(--muted);
+}
+.tb-btn.tb-count.tb-zero .tb-caret {
+  display: none;
+}
+.class-findings {
+  border: 1px solid color-mix(in srgb, var(--warn) 60%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--warn) 10%, transparent);
+  color: var(--warn);
+  font: inherit;
+  font-size: 11px;
+  padding: 0 7px;
+  cursor: pointer;
+}
+.class-node.finding-hl .cls-box,
+.class-node.finding-hl rect:first-of-type {
+  stroke: var(--warn);
+  stroke-width: 2.5;
+}
+.relation.finding-hl .rel-line {
+  stroke: var(--warn);
+  stroke-width: 2.5;
+}
+
+/* FR-19.9 project-wide design issues */
+.ep-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+}
+.ep-search-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin: 0 10px 6px;
+}
+.ep-search-row .ep-search {
+  flex: 1;
+  margin: 0;
+}
+.ep-search-row .ep-select-btn {
+  margin-left: 0;
+}
+.ep-issues-btn {
+  margin-left: auto;
+  /* neutral, not alarm-coloured — these open lists, they do not report a problem */
+  border: 1px solid color-mix(in srgb, var(--fg) 35%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--fg) 6%, transparent);
+  color: var(--fg);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  padding: 0 8px;
+  cursor: pointer;
+}
+.di-rescan {
+  margin-left: auto;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1;
+  padding: 2px 5px;
+  cursor: pointer;
+}
+.di-rescan:hover {
+  border-color: var(--border);
+  color: inherit;
+}
+.di-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.di-bar {
+  height: 3px;
+  margin: 2px 10px 6px;
+  background: var(--border);
+  border-radius: 2px;
+}
+.di-bar-fill {
+  height: 100%;
+  background: var(--warn);
+  border-radius: 2px;
+}
+.di-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+}
+.di-title {
+  font-size: 12px;
+}
+.di-from {
+  font-size: 11px;
+  color: var(--muted);
+}
+/* FR-31 one line per method: the name, then where it is and why (a long list stays short) */
+.un-item {
+  flex-direction: row;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.un-item .di-from {
+  flex-shrink: 0;
+}
+/* toolbar buttons set display: inline-flex, which would override the hidden attribute (⚠ without findings) */
+.tb-btn[hidden] {
+  display: none;
+}
+.participant.finding-hl .p-box {
+  stroke: var(--warn);
+  stroke-width: 2.5;
+}
+
+.ep-tool-btn {
+  margin-left: 0;
+}
+.ep-title .ep-issues-btn + .ep-tool-btn {
+  margin-left: 0;
+}
+.ep-appmap-btn {
+  border-color: color-mix(in srgb, var(--fg) 35%, transparent);
+  background: color-mix(in srgb, var(--fg) 6%, transparent);
+  color: var(--fg);
+}
+/* FR-26 the codebase map's bar: breadcrumb · totals · Rescan · ← Flow */
+.app-bar {
+  display: flex;
+  flex-wrap: wrap; /* narrow views (a Rider tool window): a second line, not a squeezed breadcrumb */
+  align-items: center;
+  gap: 2px 8px;
+  padding: 3px 8px;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  min-width: 0;
+}
+.app-bar[hidden] {
+  display: none;
+}
+.app-crumbs {
+  display: flex;
+  flex: 1 1 8em; /* wraps to the next line before it gets narrower than this */
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.app-crumb {
+  border: none;
+  background: none;
+  color: var(--vscode-textLink-foreground, #3794ff);
+  font: inherit;
+  padding: 0;
+  cursor: pointer;
+}
+.app-crumb.current {
+  color: var(--fg);
+  font-weight: 600;
+  cursor: default;
+}
+.app-sep {
+  color: var(--muted);
+}
+/* FR-26.8 "Map of n entry points ✕ All": one piece */
+.app-selection {
+  flex: none;
+  white-space: nowrap;
+}
+.app-stats {
+  flex: 1 1 10em;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+.app-action {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: none;
+  color: var(--fg);
+  font: inherit;
+  padding: 0 6px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.app-stats + .app-action {
+  margin-left: auto;
+}
+.tb-btn[data-cmd='app-map'].active,
+.tb-btn[data-cmd='layerZoom'].active,
+.tb-btn[data-cmd='foldErrors'].active {
+  background: var(--vscode-toolbar-activeBackground, color-mix(in srgb, var(--fg) 14%, transparent));
+}
+/* FR-19.10 guidance card */
+.guide-card {
+  width: 440px;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100vh - 80px);
+  overflow: auto;
+  padding: 10px 12px;
+  background: var(--vscode-menu-background, var(--fb-menu));
+  color: var(--vscode-menu-foreground, var(--fg));
+  border: 1px solid var(--vscode-menu-border, var(--border));
+  border-radius: 5px;
+  box-shadow: 0 4px 14px var(--vscode-widget-shadow, rgba(0, 0, 0, 0.18));
+  font-size: 12px;
+  line-height: 1.4;
+}
+.gc-title {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+/* FR-19.10 foldable card: title line with ▸ Why? / ▾ and ✕ */
+.gc-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.gc-head .gc-title {
+  flex: 1;
+  min-width: 0;
+  cursor: pointer;
+}
+.gc-fold,
+.gc-close {
+  flex: none;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-size: 11px;
+  padding: 0 2px;
+  cursor: pointer;
+}
+.gc-close {
+  color: var(--muted);
+}
+.gc-fold:hover,
+.gc-close:hover {
+  text-decoration: underline;
+}
+.guide-card.folded {
+  padding: 5px 10px;
+}
+.guide-card.folded .gc-title {
+  margin-bottom: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.guide-card.folded .gc-detail,
+.guide-card.folded .gc-section,
+.guide-card.folded .gc-actions {
+  display: none;
+}
+.gc-detail {
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.gc-section {
+  display: grid;
+  grid-template-columns: 92px 1fr;
+  gap: 8px;
+  padding: 4px 0;
+  border-top: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+}
+.gc-label {
+  color: var(--muted);
+  font-size: 11px;
+}
+.gc-fixes {
+  margin: 0;
+  padding-left: 16px;
+}
+.gc-fixes li + li {
+  margin-top: 2px;
+}
+.gc-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 8px;
+}
+.gc-btn {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 11px;
+  padding: 2px 8px;
+  cursor: pointer;
+}
+.gc-btn.primary {
+  background: var(--accent, #2563eb);
+  border-color: var(--accent, #2563eb);
+  color: #fff;
+}
+.gc-info {
+  color: var(--muted);
+  cursor: pointer;
+  font-weight: 400;
+}
+.gc-info:hover,
+.gc-info:focus-visible {
+  color: inherit;
+  outline: none;
+}
+
+/* ───────────── FR-22 paths to here ───────────── */
+
+.callers-paths {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  padding: 4px 8px 2px;
+  border: 0;
+  border-top: 1px solid var(--line);
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-size: 11px;
+  text-align: left;
+  cursor: pointer;
+}
+.callers-paths:hover {
+  text-decoration: underline;
+}
+.paths-target {
+  font-family: var(--mono-font);
+  font-weight: 600;
+}
+.paths-summary {
+  padding-top: 0;
+}
+.paths-item {
+  align-items: center;
+  gap: 6px;
+}
+.paths-toggle {
+  flex: none;
+  width: 10px;
+  color: var(--muted);
+  font-size: 10px;
+}
+.paths-name {
+  flex: 0 1 auto;
+  min-width: 7em;
+  font-family: var(--mono-font);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.paths-root .paths-name {
+  font-weight: 600;
+}
+.paths-item.in-test .paths-name {
+  color: var(--muted);
+}
+.paths-panel {
+  width: min(780px, calc(100vw - 40px));
+}
+.paths-entry {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0 5px;
+  border-radius: 6px;
+  border: 1px solid color-mix(in srgb, var(--accent) 50%, transparent);
+  font-family: var(--mono-font);
+  font-size: 10px;
+  color: var(--accent);
+}
+.paths-entry .ep-verb {
+  min-width: 0;
+  margin-right: 4px;
+}
+.paths-entry.kind-test {
+  border-color: var(--line);
+  color: var(--muted);
+}
+.paths-end {
+  flex: none;
+  font-size: 10px;
+  font-style: italic;
+  color: var(--muted);
+}
+.paths-loc {
+  font-size: 10px;
+}
+.paths-copy {
+  margin-left: auto;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 400;
+  padding: 0 8px;
+  cursor: pointer;
+}
+.paths-copy:hover {
+  color: inherit;
+  border-color: var(--border);
+}
+
+/* ───────────── FR-23 find ───────────── */
+
+.find-bar {
+  position: fixed;
+  top: 40px;
+  right: 14px;
+  z-index: 30;
+  width: min(460px, calc(100vw - 28px));
+  border: 1px solid var(--vscode-widget-border, var(--border));
+  border-radius: 5px;
+  background: var(--vscode-editorWidget-background, var(--fb-menu));
+  color: var(--vscode-editorWidget-foreground, var(--fg));
+  box-shadow: 0 2px 10px var(--vscode-widget-shadow, rgba(0, 0, 0, 0.18));
+  font-size: 12px;
+}
+.find-bar[hidden] {
+  display: none;
+}
+.find-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 6px;
+}
+.find-icon {
+  color: var(--muted);
+  font-size: 14px;
+}
+.find-input {
+  flex: 1;
+  min-width: 60px;
+  padding: 3px 6px;
+  border: 1px solid var(--vscode-input-border, var(--border));
+  border-radius: 3px;
+  background: var(--vscode-input-background, var(--bg));
+  color: var(--vscode-input-foreground, var(--fg));
+  font: inherit;
+  font-family: var(--mono-font);
+}
+.find-input::placeholder {
+  /* the UI font: narrower than the input's monospace, so the hint fits */
+  font-family: var(--vscode-font-family, system-ui, sans-serif);
+  color: var(--vscode-input-placeholderForeground, var(--muted));
+  opacity: 1;
+}
+.find-input:focus {
+  outline: 1px solid var(--focus);
+  outline-offset: -1px;
+}
+.find-count {
+  min-width: 52px;
+  color: var(--muted);
+  font-size: 11px;
+  text-align: right;
+  white-space: nowrap;
+}
+.find-count.none {
+  color: var(--vscode-errorForeground, #cf222e);
+}
+.find-wrap {
+  color: var(--muted);
+  font-size: 11px;
+  font-style: italic;
+  white-space: nowrap;
+}
+.find-btn {
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  padding: 1px 5px;
+  cursor: pointer;
+}
+.find-btn:hover {
+  background: var(--vscode-toolbar-hoverBackground, var(--fb-btn-hover));
+}
+.find-dim {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--muted);
+  font-size: 11px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.find-deep {
+  border-top: 1px solid var(--line);
+  padding: 3px 0 4px;
+}
+.find-deep-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 10px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.find-deep-status.error {
+  color: var(--vscode-errorForeground, #cf222e);
+}
+.find-deeper {
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  padding: 0;
+  cursor: pointer;
+}
+.find-deeper:hover {
+  text-decoration: underline;
+}
+.find-deep-list {
+  max-height: 40vh;
+  overflow-y: auto;
+}
+.find-deep-item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  width: 100%;
+  padding: 3px 10px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.find-deep-item:hover,
+.find-deep-item:focus-visible {
+  background: var(--vscode-list-hoverBackground, var(--fb-btn-hover));
+  outline: none;
+}
+.find-deep-name {
+  flex: none;
+  font-family: var(--mono-font);
+  font-weight: 600;
+}
+.find-deep-via {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--muted);
+  font-size: 11px;
+}
+.find-deep-loc {
+  margin-left: auto;
+  flex: none;
+  color: var(--muted);
+  font-size: 10px;
+}
+/* matches: outlined; the current one is the normal highlight (sequence) / a thicker outline (class) */
+.message.find-hit .msg-highlight {
+  fill: color-mix(in srgb, var(--warn) 14%, transparent);
+  stroke: color-mix(in srgb, var(--warn) 70%, transparent);
+  stroke-width: 1;
+}
+.message.find-hit.highlighted .msg-highlight {
+  fill: var(--highlight);
+  stroke: var(--focus);
+  stroke-width: 1.5;
+}
+.seq-header .find-hit rect:first-of-type {
+  stroke: var(--warn);
+}
+/* FR-19.20 while a finding's card is open: what it is not about steps back (its evidence and context stay) */
+.evidence-dimmed .message:not(.evidence-keep):not(:hover),
+.evidence-dimmed .activation:not(.evidence-keep),
+.evidence-dimmed .participant:not(.evidence-keep),
+.evidence-dimmed .lifeline[data-lifeline]:not(.evidence-keep),
+.evidence-dimmed .fragment:not(.evidence-keep),
+.evidence-dimmed .exit-marker,
+.evidence-dimmed .class-node:not(.finding-hl),
+.evidence-dimmed .relation:not(.finding-hl) {
+  opacity: 0.25;
+  transition: opacity 0.15s;
+}
+.find-dimmed .message:not(.find-hit),
+.find-dimmed .class-node:not(.find-hit),
+.find-dimmed .relation {
+  opacity: 0.25;
+}
+.class-node.find-hit .cls-box {
+  stroke: var(--warn);
+  stroke-width: 1.5;
+}
+.class-node.find-current .cls-box {
+  stroke-width: 3;
+}
+.cls-member.find-hit,
+.cls-member.find-hit tspan {
+  fill: var(--warn);
+  font-weight: 700;
+}
+.find-ticks {
+  position: fixed;
+  right: 2px;
+  width: 6px;
+  pointer-events: none;
+  z-index: 5;
+}
+.find-tick {
+  position: absolute;
+  left: 0;
+  width: 6px;
+  height: 2px;
+  background: var(--warn);
+  opacity: 0.8;
+}
+.find-tick.current {
+  height: 3px;
+  background: var(--focus);
+  opacity: 1;
+}
+.find-count.none.deep-only {
+  color: var(--muted);
+}
+
+/* FR-1.16 a guard scrolled out of view, repeated at the edge of the view (click: scroll to it) */
+.guard-ghost {
+  fill: var(--accent);
+  font-style: italic;
+  opacity: 0.85;
+}
+.guard-ghost:hover {
+  opacity: 1;
+}
+.guard-ghost-item {
+  cursor: pointer;
+}
+.guard-ghost-bg {
+  fill: var(--bg);
+}
+
+/* ───────────── FR-24 review of a branch ───────────── */
+
+.seqcall {
+  --diff: var(--vscode-gitDecoration-addedResourceForeground, #2da44e);
+  --diff-changed: var(--vscode-gitDecoration-modifiedResourceForeground, #bf8700);
+}
+/* a call on a changed line: its arrow in the diff colour */
+.message.diff-call .msg-line {
+  stroke: var(--diff);
+  stroke-width: 2;
+}
+/* a method added / changed on the branch: its name underlined in the diff colour */
+.message.diff-method .seg-name {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+}
+.message.diff-added .seg-name {
+  fill: var(--diff);
+  text-decoration-color: var(--diff);
+}
+.message.diff-changed .seg-name {
+  text-decoration-color: var(--diff-changed);
+}
+/* FR-24.6 compared with the base version: new call green, edited call amber, removed call a red dashed ghost */
+.seqcall {
+  --diff-removed: var(--vscode-gitDecoration-deletedResourceForeground, #cf222e);
+}
+.message.diff-st-added .msg-line {
+  stroke: var(--diff);
+  stroke-width: 2;
+}
+.message.diff-st-changed .msg-line {
+  stroke: var(--diff-changed);
+  stroke-width: 2;
+}
+.message.diff-st-removed .msg-line {
+  stroke: var(--diff-removed);
+  stroke-dasharray: 5 3;
+}
+.message.diff-st-removed text {
+  fill: var(--diff-removed);
+  text-decoration: line-through;
+  opacity: 0.85;
+}
+.arrow-head.removed {
+  fill: var(--diff-removed);
+}
+.arrow-open.removed {
+  stroke: var(--diff-removed);
+}
+.participant.diff-added .p-box {
+  stroke: var(--diff);
+  stroke-width: 2;
+}
+.participant.diff-removed .p-box {
+  stroke: var(--diff-removed);
+  stroke-dasharray: 5 3;
+}
+.participant.diff-removed .p-label {
+  fill: var(--diff-removed);
+  text-decoration: line-through;
+}
+.lifeline-hit {
+  stroke: transparent;
+  stroke-width: 9;
+  pointer-events: stroke;
+}
+.lifeline.diff-removed {
+  stroke: var(--diff-removed);
+  opacity: 0.6;
+}
+.review-panel {
+  width: min(720px, calc(100vw - 40px));
+}
+.rv-base {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px 6px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.rv-base input[type='text'] {
+  width: 160px;
+  padding: 2px 6px;
+  border: 1px solid var(--vscode-input-border, var(--border));
+  border-radius: 3px;
+  background: var(--vscode-input-background, var(--bg));
+  color: var(--vscode-input-foreground, var(--fg));
+  font: inherit;
+  font-family: var(--mono-font);
+}
+.rv-btn {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 11px;
+  padding: 1px 8px;
+  cursor: pointer;
+}
+.rv-btn.primary {
+  background: var(--accent, #2563eb);
+  border-color: var(--accent, #2563eb);
+  color: #fff;
+}
+.rv-summary {
+  padding: 0 10px 6px;
+  font-size: 12px;
+}
+.rv-summary .warn {
+  color: var(--warn);
+  font-weight: 600;
+}
+.rv-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+}
+.rv-sub {
+  font-size: 11px;
+  color: var(--muted);
+}
+.rv-ep {
+  font-weight: 600;
+}
+.rv-method {
+  padding-left: 22px;
+}
+.rv-status {
+  font-weight: 700;
+  margin-right: 4px;
+}
+.rv-status.added {
+  color: var(--diff);
+}
+.rv-status.changed {
+  color: var(--diff-changed);
+}
+.rv-status.removed {
+  color: var(--diff-removed);
+}
+/* FR-29 the structure did not change: one quiet line where the group would be */
+.rv-shape-ok {
+  font-weight: 400;
+  color: var(--muted);
+  white-space: normal;
+}
+.rv-legend {
+  padding: 4px 10px;
+  font-size: 11px;
+  color: var(--muted);
+  border-top: 1px solid var(--line);
+}
+.rv-note {
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* the issues a call is evidence of (a red arrow: the rule it breaks) */
+.hover-card .hc-issue {
+  margin-top: 6px;
+  font-weight: 600;
+  color: var(--warn);
+}
+.hover-card .hc-issue.violation {
+  color: var(--vscode-errorForeground, #e5534b);
+}
+
+/* FR-24.7 the call's lines of the diff in its hover card */
+.hover-card .hc-diff-head {
+  margin-top: 6px;
+  font-weight: 600;
+  color: var(--diff-changed);
+}
+.hover-card .hc-diff-head.added {
+  color: var(--diff);
+}
+.hover-card .hc-diff-head.removed {
+  color: var(--diff-removed);
+}
+.hover-card .hc-hunk {
+  margin-top: 3px;
+  font-family: var(--vscode-editor-font-family, ui-monospace, monospace);
+  font-size: 11px;
+  max-width: 560px;
+  overflow: hidden;
+  border-radius: 3px;
+}
+.hover-card .hc-hunk-line {
+  white-space: pre;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0 4px;
+}
+.hover-card .hc-hunk-line.kadd {
+  background: color-mix(in srgb, var(--diff) 18%, transparent);
+}
+.hover-card .hc-hunk-line.kdel {
+  background: color-mix(in srgb, var(--diff-removed) 18%, transparent);
+}
+.hover-card .hc-hunk-line.at {
+  font-weight: 700;
+}
+
+/* FR-24.6 class diagram compared with the base version: new classes / relations green, removed ones red dashed */
+.relation.diff-added .rel-line {
+  stroke: var(--diff);
+  stroke-width: 2;
+}
+.relation.diff-removed .rel-line {
+  stroke: var(--diff-removed);
+  stroke-dasharray: 5 3;
+}
+.class-node.diff-added .cls-box {
+  stroke: var(--diff);
+  stroke-width: 2;
+}
+.class-node.diff-removed .cls-box {
+  stroke: var(--diff-removed);
+  stroke-dasharray: 5 3;
+}
+.class-node.diff-removed .cls-name {
+  text-decoration: line-through;
+  fill: var(--diff-removed);
+}
+
+/* FR-24.8 when the review was computed (and whether it was reused) */
+.rv-when {
+  padding: 0 10px 4px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* FR-24.9 / FR-24.10 the review bar, the change ruler and the badge of changes below a collapsed call */
+.review-bar-host[hidden] {
+  display: none;
+}
+.review-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  font-size: 12px;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--diff-changed) 8%, var(--bg));
+  white-space: nowrap;
+  overflow: hidden;
+}
+.review-bar .rb-btn {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  color: inherit;
+  cursor: pointer;
+  padding: 0 4px;
+  font-size: 12px;
+}
+.review-bar .rb-btn:hover:not(:disabled) {
+  border-color: var(--border);
+}
+.review-bar .rb-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.review-bar .rb-title {
+  font-weight: 600;
+}
+.review-bar .rb-sep {
+  color: var(--muted);
+}
+.review-bar .rb-count {
+  color: var(--muted);
+}
+.review-bar .rb-flow,
+.review-bar .rb-change {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+.review-bar .rb-flow {
+  max-width: 34%;
+}
+/* FR-24.12 fixed widths: ⏭ and ▶ stay where they are while the flow / change text changes (full text in the tooltip) */
+.review-bar .rb-flow,
+.review-bar .rb-change {
+  flex: none;
+  white-space: nowrap;
+  text-align: left;
+}
+.review-bar .rb-flow {
+  width: clamp(130px, 26vw, 380px);
+  max-width: none;
+}
+.review-bar .rb-change {
+  width: clamp(110px, 22vw, 320px);
+}
+/* the branch name gives way first (full name in the tooltip): the arrows stay on screen */
+.review-bar .rb-title {
+  flex: 0 1 auto;
+  min-width: 48px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.review-bar .rb-also {
+  color: var(--muted);
+}
+.review-bar .rb-change.st-added {
+  color: var(--diff);
+}
+.review-bar .rb-change.st-removed {
+  color: var(--diff-removed);
+}
+.review-bar .rb-change.st-changed {
+  color: var(--diff-changed);
+}
+.change-ruler {
+  position: fixed;
+  width: 8px;
+  z-index: 5;
+}
+.change-ruler[hidden] {
+  display: none;
+}
+.ruler-tick {
+  position: absolute;
+  left: 0;
+  width: 8px;
+  height: 4px;
+  padding: 0;
+  border: none;
+  border-radius: 1px;
+  cursor: pointer;
+  background: var(--diff-changed);
+}
+.ruler-tick.st-added {
+  background: var(--diff);
+}
+.ruler-tick.st-removed {
+  background: var(--diff-removed);
+}
+.ruler-tick.st-inside {
+  background: transparent;
+  border: 1px solid var(--diff-changed);
+}
+.ruler-tick.current {
+  height: 6px;
+  outline: 1px solid var(--fg);
+}
+.diff-inside {
+  cursor: pointer;
+}
+.diff-inside circle {
+  fill: var(--diff-changed);
+}
+.diff-inside text {
+  fill: #fff;
+  font-size: 8px;
+  font-weight: 700;
+}
+
+/* FR-24.11 what the branch did to a class: NEW / Δn tag on objects and class boxes, member signs and rows */
+.change-tag {
+  cursor: pointer;
+}
+.change-tag rect {
+  fill: var(--diff-changed);
+}
+.change-tag.new rect {
+  fill: var(--diff);
+}
+.change-tag text {
+  fill: #fff;
+  font-size: 9px;
+  font-weight: 700;
+}
+.cls-diff-sign {
+  font-size: 11px;
+  font-weight: 700;
+  fill: var(--diff-changed);
+}
+.cls-diff-sign.added {
+  fill: var(--diff);
+}
+.cls-diff-sign.removed {
+  fill: var(--diff-removed);
+}
+.cls-member.diff-added .cls-m-name {
+  fill: var(--diff);
+}
+.cls-member.diff-changed .cls-m-name {
+  fill: var(--diff-changed);
+}
+.cls-member.diff-removed tspan {
+  fill: var(--diff-removed);
+}
+.cls-member[data-member-diff] {
+  cursor: pointer;
+}
+.cls-member.field .cls-m-name {
+  font-style: italic;
+}
+
+/* FR-7.8 Why this layer? */
+.layer-reason-card {
+  max-width: min(460px, 90vw);
+}
+.layer-reason-card .lr-layer {
+  color: var(--lc, var(--accent));
+}
+.lr-section {
+  padding: 2px 6px 6px;
+}
+.lr-head {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  padding-bottom: 2px;
+}
+.lr-row {
+  display: flex;
+  gap: 6px;
+  padding: 1px 0;
+  line-height: 1.4;
+}
+.lr-mark {
+  flex: none;
+  width: 12px;
+  text-align: center;
+}
+.lr-row .code {
+  font-family: var(--mono-font);
+}
+.lr-skipped {
+  color: var(--muted);
+}
+.lr-decided {
+  font-weight: 600;
+}
+.lr-decided .lr-strength {
+  font-weight: normal;
+  color: var(--muted);
+}
+.lr-decided.weak .lr-mark {
+  color: var(--vscode-editorWarning-foreground, #d4a72c);
+}
+.lr-violation .lr-mark {
+  color: var(--vscode-editorWarning-foreground, #d4a72c);
+}
+.lr-actions {
+  display: flex;
+  gap: 6px;
+  padding: 4px 6px 2px;
+}
+.lr-note {
+  padding: 4px 6px 2px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.lr-path {
+  font-family: var(--mono-font);
+  overflow-wrap: anywhere;
+}
+.lr-hit {
+  background: color-mix(in srgb, var(--lc, var(--accent)) 25%, transparent);
+  color: inherit;
+  border-radius: 2px;
+  padding: 0 1px;
+  font-weight: 600;
+}
+.lr-stereo .lr-mark {
+  color: var(--muted);
+  font-size: 10px;
+}
+.lr-stereo-name {
+  font-style: italic;
+}
+.lr-stereo.weak .lr-mark {
+  color: var(--vscode-editorWarning-foreground, #d4a72c);
+}
+
+/* FR-12.17 the class of the object clicked in the sequence diagram */
+.class-node.class-focused .cls-box {
+  stroke: var(--accent);
+  stroke-width: 3;
+}
+
+/* FR-7.12 Move to layer: what the rule covers */
+.ls-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px 6px;
+}
+.ls-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+.ls-row .code {
+  font-family: var(--mono-font);
+}
+.ls-count {
+  color: var(--muted);
+}
+
+/* FR-25 a short confirmation on the image button */
+.toolbar button[data-flash]::after {
+  content: attr(data-flash);
+  position: absolute;
+  top: 100%;
+  margin-top: 4px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  white-space: nowrap;
+  background: var(--vscode-notifications-background, var(--fb-menu));
+  color: var(--vscode-notifications-foreground, var(--fg));
+  border: 1px solid var(--border);
+  z-index: 20;
+}
+.toolbar button[data-flash] {
+  position: relative;
+}
+
+/* FR-24.12 the flows of the review */
+.review-bar .rb-flow-btn {
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  padding: 1px 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.review-bar .rb-flow-btn:hover {
+  border-color: var(--border);
+}
+.flow-chooser {
+  width: min(560px, 92vw);
+  padding: 6px;
+}
+.flow-chooser .fc-filter {
+  width: 100%;
+  box-sizing: border-box;
+}
+.fc-status {
+  padding: 4px 4px 2px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.fc-list {
+  max-height: min(60vh, 420px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+.fc-sep {
+  margin: 6px 4px 2px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+.fc-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  text-align: left;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  padding: 4px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.fc-row:hover,
+.fc-row.active {
+  background: var(--vscode-menu-selectionBackground, var(--fb-menu-sel));
+  color: var(--vscode-menu-selectionForeground, var(--fb-menu-sel-fg));
+}
+.fc-row.current .fc-num {
+  color: var(--accent);
+}
+/* FR-24.12 an entry point a flow covers, under the flow */
+.fc-row.fc-sub {
+  padding-left: 26px;
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+.fc-row.fc-sub .fc-label {
+  font-size: 12px;
+}
+.fc-num {
+  flex: none;
+  width: 22px;
+  text-align: right;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.fc-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.fc-label {
+  font-family: var(--mono-font);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fc-methods {
+  font-size: 11px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* FR-24.13 compare with: a searchable list of branches, tags and commits */
+.rv-compare {
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.rv-pick {
+  display: inline-flex;
+  align-items: center;
+  max-width: 280px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: var(--vscode-input-background, transparent);
+  color: inherit;
+  font: inherit;
+  font-family: var(--mono-font);
+  padding: 1px 6px;
+  cursor: pointer;
+}
+.rv-pick-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rv-mode {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.rv-picker[hidden] {
+  display: none;
+}
+.rv-pick-panel {
+  margin: 4px 0 6px;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+.rv-filter {
+  width: 100%;
+  box-sizing: border-box;
+}
+.rv-pick-list {
+  max-height: min(50vh, 340px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+.rv-compared {
+  padding: 2px 8px 6px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.rv-mode input {
+  margin: 0 2px 0 0;
+}
+/* the highlighted row: its detail line readable on the selection colour */
+.fc-row.active .fc-methods,
+.fc-row:hover .fc-methods {
+  color: inherit;
+  opacity: 0.8;
+}
+
+/* FR-25.2 the paste / copy card of a shared diagram state */
+.state-card {
+  width: min(480px, 90vw);
+}
+.state-card .state-text {
+  display: block;
+  box-sizing: border-box;
+  width: calc(100% - 12px);
+  margin: 0 6px;
+  resize: vertical;
+  font-family: var(--mono-font);
+  font-size: 11px;
+  color: var(--fg);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 4px;
+}
+/* FR-25.3 a shared diagram's layer config is in use: a warning, not information */
+.expand-notice.borrowed-config {
+  background: color-mix(in srgb, var(--vscode-editorWarning-foreground, #d4a72c) 14%, var(--bg));
+}
+.expand-notice.borrowed-config .code {
+  font-family: var(--mono-font);
+}
+/* FR-25 the Share icon (inline SVG, the text colour) */
+.tb-icon .share-icon {
+  display: inline-block;
+  vertical-align: -2px;
+}
+/* FR-28.11 the object view: every band's ⊖ shows while the band is hovered (it would cover the end of long labels) */
+.band-fold.quiet {
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+.group:hover .band-fold.quiet {
+  opacity: 1;
+}
+/* FR-28.11 an object's own ⊖ (fold it alone into its layer): while its box is hovered */
+.obj-fold.quiet,
+.class-node .obj-fold.quiet {
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+.participant:hover .obj-fold.quiet,
+.class-node:hover .obj-fold.quiet {
+  opacity: 1;
+}
+
+/* "How to read this" (View ▾): the diagram's marks, each with one sentence */
+.legend-card {
+  max-width: 520px;
+}
+.legend-rows {
+  display: grid;
+  gap: 6px;
+  margin: 6px 0;
+}
+.legend-row {
+  display: grid;
+  grid-template-columns: 56px 1fr;
+  gap: 10px;
+  align-items: center;
+}
+.legend-glyph {
+  overflow: visible;
+}
+.legend-glyph .legend-head {
+  fill: var(--fg);
+  stroke: var(--fg);
+}
+.legend-glyph .legend-head.open {
+  fill: none;
+}
+.legend-glyph .legend-violation,
+.legend-glyph .legend-violation + .legend-head {
+  stroke: var(--vscode-errorForeground, #e5534b);
+  fill: var(--vscode-errorForeground, #e5534b);
+  stroke-width: 2;
+}
+.legend-glyph .legend-sym {
+  fill: var(--fg);
+  font-size: 11px;
+}
+.legend-text {
+  font-size: 12px;
+}
+.keys-rows {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 12px;
+  margin: 6px 0;
+  align-items: baseline;
+}
+.keys-rows kbd {
+  font-family: var(--mono-font);
+  font-size: 11px;
+  white-space: nowrap;
+}
+/* the call whose implementation was just switched */
+.message.just-swapped .msg-line {
+  stroke: var(--accent);
+  stroke-width: 2.5;
+}

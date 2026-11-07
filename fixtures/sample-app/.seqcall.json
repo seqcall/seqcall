@@ -1,0 +1,14 @@
+{
+  "layers": [
+    { "name": "Presentation", "match": ["src/controllers/**", "src/legacy/**"] },
+    { "name": "Application", "match": ["src/services/**"] },
+    { "name": "Ports", "match": ["src/ports/**"] },
+    { "name": "Domain", "match": ["src/domain/**"] },
+    { "name": "Infrastructure", "match": ["src/adapters/**", "src/infrastructure/**", "src/notifications/**"] }
+  ],
+  "stereotypes": [
+    { "stereotype": "port", "match": { "path": "src/ports/**" } },
+    { "stereotype": "gateway", "match": { "name": ".*Gateway$" } },
+    { "stereotype": "notifier", "match": { "implements": "^Notifier$" } }
+  ]
+}

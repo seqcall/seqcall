@@ -1,0 +1,16 @@
+{
+  "name": "@seqcall/stdio-host",
+  "version": "0.1.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "description": "Core as a Node sidecar speaking newline-delimited JSON-RPC on stdio (for non-Node editors: the Rider plugin).",
+  "main": "src/index.ts",
+  "scripts": {
+    "build": "node build.mjs",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@seqcall/core": "*",
+    "@seqcall/protocol": "*"
+  }
+}

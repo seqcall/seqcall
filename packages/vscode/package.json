@@ -1,0 +1,505 @@
+{
+  "name": "@seqcall/vscode",
+  "displayName": "Seqcall",
+  "description": "Explore how your code behaves: click through call flows as sequence diagrams, expand only what matters, jump to the code, and see layer violations in a live class diagram (TypeScript/JavaScript, C#, PHP).",
+  "keywords": [
+    "sequence diagram",
+    "class diagram",
+    "uml",
+    "call graph",
+    "architecture",
+    "clean architecture",
+    "layers",
+    "code navigation",
+    "onboarding",
+    "typescript",
+    "csharp",
+    "php",
+    "laravel"
+  ],
+  "version": "0.1.0",
+  "private": true,
+  "publisher": "seqcall",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/seqcall/seqcall"
+  },
+  "bugs": {
+    "url": "https://github.com/seqcall/seqcall/issues"
+  },
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Visualization",
+    "Programming Languages"
+  ],
+  "icon": "media/icon.png",
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "onLanguage:javascript",
+    "onLanguage:typescript",
+    "onLanguage:javascriptreact",
+    "onLanguage:typescriptreact",
+    "onLanguage:csharp",
+    "onLanguage:php",
+    "onWebviewPanel:seqcall.sequence",
+    "onWebviewPanel:seqcall.class",
+    "onStartupFinished"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "seqcall.showSequenceDiagram",
+        "title": "Show Sequence Diagram",
+        "category": "Seqcall"
+      },
+      {
+        "command": "seqcall.showClassDiagram",
+        "title": "Show Class Diagram",
+        "category": "Seqcall"
+      },
+      {
+        "command": "seqcall.showEntryPoints",
+        "title": "Show Entry Points",
+        "category": "Seqcall"
+      },
+      {
+        "command": "seqcall.showCodebaseMap",
+        "title": "Show Codebase Map",
+        "category": "Seqcall",
+        "icon": "$(type-hierarchy)"
+      },
+      {
+        "command": "seqcall.toggleFollowCursor",
+        "title": "Toggle Follow Cursor",
+        "category": "Seqcall"
+      },
+      {
+        "command": "seqcall.find",
+        "title": "Find in Diagram",
+        "category": "Seqcall"
+      },
+      {
+        "command": "seqcall.reviewChanges",
+        "title": "Review Branch (changes against develop)",
+        "category": "Seqcall",
+        "icon": "$(git-compare)"
+      },
+      {
+        "command": "seqcall.copyDiagramState",
+        "title": "Share: Copy Diagram to Reopen Elsewhere",
+        "category": "Seqcall"
+      },
+      {
+        "command": "seqcall.openDiagramState",
+        "title": "Open a Shared Diagram (from the clipboard)",
+        "category": "Seqcall"
+      },
+      {
+        "command": "seqcall.selectEntryPointsForMap",
+        "title": "Select Entry Points for a Map",
+        "category": "Seqcall",
+        "icon": "$(list-selection)"
+      },
+      {
+        "command": "seqcall.doneSelectingEntryPoints",
+        "title": "Done Selecting",
+        "category": "Seqcall",
+        "icon": "$(check)"
+      },
+      {
+        "command": "seqcall.switchEntryPointsProject",
+        "title": "Switch Project…",
+        "category": "Seqcall",
+        "icon": "$(folder-library)"
+      },
+      {
+        "command": "seqcall.refreshEntryPoints",
+        "title": "Refresh Entry Points",
+        "category": "Seqcall",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "seqcall.openEntryPoint",
+        "title": "Open Entry Point Flow",
+        "category": "Seqcall"
+      },
+      {
+        "command": "seqcall.mapOfSelectedEntryPoints",
+        "title": "Map of Selected Entry Points",
+        "category": "Seqcall",
+        "icon": "$(checklist)"
+      },
+      {
+        "command": "seqcall.clearEntryPointSelection",
+        "title": "Clear Entry Point Selection",
+        "category": "Seqcall",
+        "icon": "$(clear-all)"
+      },
+      {
+        "command": "seqcall.showUnreachable",
+        "title": "Show Unreachable Code",
+        "category": "Seqcall"
+      },
+      {
+        "command": "seqcall.scanDesignIssues",
+        "title": "Scan for Design Issues",
+        "category": "Seqcall",
+        "icon": "$(play)"
+      },
+      {
+        "command": "seqcall.rescanDesignIssues",
+        "title": "Scan Again",
+        "category": "Seqcall",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "seqcall.cancelDesignIssues",
+        "title": "Cancel Scan",
+        "category": "Seqcall",
+        "icon": "$(debug-stop)"
+      },
+      {
+        "command": "seqcall.reviewBranch",
+        "title": "Review Branch",
+        "category": "Seqcall",
+        "icon": "$(git-compare)"
+      },
+      {
+        "command": "seqcall.rerunReview",
+        "title": "Re-run Review",
+        "category": "Seqcall",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "seqcall.reviewCompareWith",
+        "title": "Compare with…",
+        "category": "Seqcall",
+        "icon": "$(git-branch)"
+      },
+      {
+        "command": "seqcall.cancelReviewFromSidebar",
+        "title": "Cancel Review",
+        "category": "Seqcall",
+        "icon": "$(debug-stop)"
+      },
+      {
+        "command": "seqcall.endReview",
+        "title": "End Review",
+        "category": "Seqcall",
+        "icon": "$(close)"
+      },
+      {
+        "command": "seqcall.sidebarOpen",
+        "title": "Open",
+        "category": "Seqcall"
+      },
+      {
+        "command": "seqcall.goToEntryPoint",
+        "title": "Go to Entry Point…",
+        "category": "Seqcall",
+        "icon": "$(search)"
+      },
+      {
+        "command": "seqcall.loadEntryPoints",
+        "title": "Load Entry Points",
+        "category": "Seqcall",
+        "icon": "$(play)"
+      },
+      {
+        "command": "seqcall.showMemory",
+        "title": "Show Memory",
+        "category": "Seqcall"
+      },
+      {
+        "command": "seqcall.freeMemory",
+        "title": "Free Memory",
+        "category": "Seqcall"
+      },
+      {
+        "command": "seqcall.checkForUpdates",
+        "title": "Check for Updates",
+        "category": "Seqcall"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "seqcall.showSequenceDiagram",
+          "when": "editorLangId =~ /^((javascript|typescript)(react)?|csharp|php)$/",
+          "group": "navigation@90"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "seqcall.goToEntryPoint",
+          "when": "view == seqcall.entryPoints",
+          "group": "navigation@0"
+        },
+        {
+          "command": "seqcall.mapOfSelectedEntryPoints",
+          "when": "view == seqcall.entryPoints && seqcall.entryPointsSelected",
+          "group": "navigation@0"
+        },
+        {
+          "command": "seqcall.clearEntryPointSelection",
+          "when": "view == seqcall.entryPoints && seqcall.entryPointsSelected",
+          "group": "navigation@0"
+        },
+        {
+          "command": "seqcall.doneSelectingEntryPoints",
+          "when": "view == seqcall.entryPoints && seqcall.selectingForMap",
+          "group": "navigation@0"
+        },
+        {
+          "command": "seqcall.refreshEntryPoints",
+          "when": "view == seqcall.entryPoints",
+          "group": "navigation@1"
+        },
+        {
+          "command": "seqcall.switchEntryPointsProject",
+          "when": "view == seqcall.entryPoints && seqcall.severalProjects",
+          "group": "navigation@4"
+        },
+        {
+          "command": "seqcall.selectEntryPointsForMap",
+          "when": "view == seqcall.entryPoints && !seqcall.selectingForMap",
+          "group": "1_select@1"
+        },
+        {
+          "command": "seqcall.showCodebaseMap",
+          "when": "view == seqcall.entryPoints",
+          "group": "navigation@2"
+        },
+        {
+          "command": "seqcall.cancelDesignIssues",
+          "when": "view == seqcall.designIssues && seqcall.designIssues == running",
+          "group": "navigation@0"
+        },
+        {
+          "command": "seqcall.rescanDesignIssues",
+          "when": "view == seqcall.designIssues && seqcall.designIssues != running && seqcall.designIssues != none",
+          "group": "navigation@1"
+        },
+        {
+          "command": "seqcall.cancelReviewFromSidebar",
+          "when": "view == seqcall.review && seqcall.review == running",
+          "group": "navigation@0"
+        },
+        {
+          "command": "seqcall.rerunReview",
+          "when": "view == seqcall.review && seqcall.review != running && seqcall.review != none",
+          "group": "navigation@1"
+        },
+        {
+          "command": "seqcall.reviewCompareWith",
+          "when": "view == seqcall.review && seqcall.review != running",
+          "group": "navigation@2"
+        },
+        {
+          "command": "seqcall.endReview",
+          "when": "view == seqcall.review && seqcall.review == done",
+          "group": "navigation@3"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "seqcall.openEntryPoint",
+          "when": "false"
+        },
+        {
+          "command": "seqcall.sidebarOpen",
+          "when": "false"
+        },
+        {
+          "command": "seqcall.cancelDesignIssues",
+          "when": "false"
+        },
+        {
+          "command": "seqcall.cancelReviewFromSidebar",
+          "when": "false"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "seqcall.showSequenceDiagram",
+        "key": "ctrl+alt+u",
+        "mac": "cmd+alt+u",
+        "when": "editorTextFocus && editorLangId =~ /^((javascript|typescript)(react)?|csharp|php)$/"
+      },
+      {
+        "command": "seqcall.find",
+        "key": "ctrl+f",
+        "mac": "cmd+f",
+        "when": "activeWebviewPanelId == 'seqcall.sequence' || activeWebviewPanelId == 'seqcall.class'"
+      }
+    ],
+    "configuration": {
+      "title": "Seqcall",
+      "properties": {
+        "seqcall.defaultDepth": {
+          "type": "integer",
+          "default": 1,
+          "minimum": 1,
+          "maximum": 10,
+          "description": "Initial expansion depth of a new sequence diagram (1 = direct calls of the root method only). Applies to newly loaded projects."
+        },
+        "seqcall.autoUpdate": {
+          "type": "string",
+          "enum": [
+            "install",
+            "notify",
+            "off"
+          ],
+          "enumDescriptions": [
+            "Install a new release by itself and offer to reload the window.",
+            "Say that a new release is there and install it when you choose Install.",
+            "No automatic check. Seqcall: Check for Updates still works."
+          ],
+          "default": "install",
+          "description": "Updates from the GitHub releases of the Seqcall repository, checked once a day."
+        },
+        "seqcall.hover": {
+          "type": "boolean",
+          "default": true,
+          "description": "Add Seqcall's lines to the editor's hover once the project is loaded: on a call, which implementation runs there (the DI container's choice, the only implementation, or the candidates) and the I/O below it; on a method's name, the entry points (routes, jobs, programs) that reach it, tests counted, and its I/O. Nothing is shown when there is nothing to say."
+        },
+        "seqcall.preloadProject": {
+          "type": "boolean",
+          "default": true,
+          "description": "Load the workspace's project in the background when VS Code starts (the open editor's project, else the folder's), so the first diagram does not wait for the TypeScript program / PHP index / C# solution to load. Costs CPU and memory at startup even when Seqcall is not used in that session."
+        },
+        "seqcall.maxArgumentLength": {
+          "type": "integer",
+          "default": 30,
+          "minimum": 0,
+          "description": "Maximum length of the whole argument list shown in a message label, shared fairly between the arguments (the full call is available as a tooltip)."
+        },
+        "seqcall.showArguments": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show call arguments in message labels."
+        },
+        "seqcall.showLibraryCalls": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show calls into libraries and the runtime (node_modules, lib.d.ts)."
+        },
+        "seqcall.showResults": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show where a call's result goes in its label: `user = findUser(id)`, `↩` for a returned value. The return type is in the tooltip."
+        },
+        "seqcall.showSideEffects": {
+          "type": "boolean",
+          "default": true,
+          "description": "Mark calls and participants that do I/O (DB, HTTP, FILE, MQ, CLOUD, PROC), judged by the libraries they call. A collapsed call also shows the I/O of already analysed calls below it."
+        },
+        "seqcall.scanSideEffects": {
+          "type": "boolean",
+          "default": true,
+          "description": "After drawing a diagram, analyse the code below collapsed calls in the background (up to 4 levels, 200 methods) so their I/O badges appear without expanding them. Off: badges only from the calls already analysed."
+        },
+        "seqcall.showFragments": {
+          "type": "boolean",
+          "default": true,
+          "description": "Draw combined fragments (alt / opt / loop / try frames) around calls that are conditional or repeated within the method body."
+        },
+        "seqcall.showPipeline": {
+          "type": "boolean",
+          "default": true,
+          "description": "Before an entry point's action, draw one collapsed row with what the framework runs first: the route's middleware (Laravel). Which sources count is set per repository in .seqcall.json (\"pipeline\")."
+        },
+        "seqcall.autoSelectSingleImplementation": {
+          "type": "boolean",
+          "default": true,
+          "description": "When an interface method has exactly one implementation, select it automatically. Applies to newly loaded projects."
+        },
+        "seqcall.classDiagram.maxMethods": {
+          "type": "integer",
+          "default": 5,
+          "minimum": 0,
+          "description": "Class diagram: methods listed per class before a '… +k more' row (click it to show all). 0 = no limit."
+        }
+      }
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "seqcall",
+          "title": "Seqcall",
+          "icon": "media/activity.svg"
+        }
+      ]
+    },
+    "views": {
+      "seqcall": [
+        {
+          "id": "seqcall.entryPoints",
+          "name": "Entry Points",
+          "icon": "media/activity.svg",
+          "contextualTitle": "Seqcall"
+        },
+        {
+          "id": "seqcall.designIssues",
+          "name": "Design Issues",
+          "icon": "media/activity.svg",
+          "contextualTitle": "Seqcall",
+          "visibility": "collapsed"
+        },
+        {
+          "id": "seqcall.review",
+          "name": "Review",
+          "icon": "media/activity.svg",
+          "contextualTitle": "Seqcall",
+          "visibility": "collapsed"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "seqcall.entryPoints",
+        "contents": "Where flows start in this project: HTTP endpoints, pages, programs, jobs, handlers, tests. The project is scanned when you ask, so diagrams never wait for it.\n[Load Entry Points](command:seqcall.loadEntryPoints)\nOr search them directly: [Go to Entry Point…](command:seqcall.goToEntryPoint)",
+        "when": "workbenchState != empty"
+      },
+      {
+        "view": "seqcall.entryPoints",
+        "contents": "Open a folder with a TypeScript, JavaScript, C# or PHP project to see where its flows start.\n[Open Folder](command:vscode.openFolder)",
+        "when": "workbenchState == empty"
+      },
+      {
+        "view": "seqcall.designIssues",
+        "contents": "Find design issues (I/O in loops, cycles, layer ping-pong, god classes …) in every entry point's flow. Each flow is expanded fully, so a large project takes a while (a large Laravel app: ~15 s).\n[Scan for Design Issues](command:seqcall.scanDesignIssues)",
+        "when": "workbenchState != empty && seqcall.designIssues == none"
+      },
+      {
+        "view": "seqcall.review",
+        "contents": "Review this branch: the methods it changed, the entry points they affect, issues on changed lines.\n[Review Branch](command:seqcall.reviewBranch)\n[Compare with…](command:seqcall.reviewCompareWith)",
+        "when": "workbenchState != empty && seqcall.review == none"
+      }
+    ]
+  },
+  "scripts": {
+    "build": "node build.mjs",
+    "watch": "node build.mjs --watch",
+    "build:test": "node build.mjs --test",
+    "test:ext": "node build.mjs --test && node dist/test/runTest.js",
+    "typecheck": "tsc -p tsconfig.json",
+    "package": "node package.mjs"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/vscode": "1.90",
+    "@vscode/test-electron": "^3.1.0",
+    "@vscode/vsce": "^4.0.0",
+    "mocha": "^12.0.3"
+  },
+  "dependencies": {
+    "@seqcall/protocol": "*",
+    "@seqcall/core": "*",
+    "@seqcall/webview": "*"
+  }
+}

@@ -1,0 +1,15 @@
+name: Feature request
+description: An idea for Seqcall
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What you want to understand or do
+      description: The question about the code you want answered, or the task; what you do today instead.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: How Seqcall could help
