@@ -1,6 +1,6 @@
 /**
- * FR-30 self-update from the GitHub releases of the public repository, shared by the VS Code extension, the
- * Vim / Neovim sidecar (`--update`) and the agent CLI. No sign-in: GitHub's API serves a public repository's releases
+ * FR-30 self-update from the GitHub releases of the public repository, shared by the Vim / Neovim sidecar
+ * (`--update`) and the agent CLI (VS Code updates from its marketplace, FR-30.8). No sign-in: GitHub's API serves a public repository's releases
  * without a token (rate-limited per IP address, far above one check a day). The editor parts (install, messages)
  * come in through `UpdateDeps`.
  */

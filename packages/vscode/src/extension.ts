@@ -6,10 +6,8 @@ import { DesignIssuesTree, ReviewTree, type SidebarAction, type SidebarNode } fr
 import { fromProtocolPath } from './paths';
 import { entryPointSearch, SEARCH_MAX } from './entry-point-search';
 import { isSourceFile, isSupportedDocument, toProtocolPath } from './paths';
-import { checkAutomatically, checkManually, registerUpdater } from './updater';
 import { dialogs } from './dialogs';
 import { SeqcallHoverProvider, HOVER_SELECTOR, OPEN_FROM_HOVER, OPEN_REACH } from './hover';
-import type { CheckResult, UpdateDeps } from '@seqcall/core';
 
 const SELECTION_DEBOUNCE_MS = 400;
 const REFRESH_DEBOUNCE_MS = 300;
@@ -54,12 +52,6 @@ export interface SeqcallTestApi {
   preloadOf(root: string): Promise<void> | undefined;
   workspaceProjects(): { root: string; language: string }[];
   setEntryPointsProject(project: { root: string; language: 'typescript' | 'csharp' | 'php' } | undefined): void;
-  /** FR-30.2 Check for Updates with parts of the GitHub side replaced (sign-in, fetch, install, confirm). */
-  checkForUpdates(overrides: Partial<UpdateDeps>): Promise<CheckResult | undefined>;
-  /** FR-30.1 the automatic check (the test host is no installed extension: it is not scheduled there). */
-  checkForUpdatesAutomatically(overrides: Partial<UpdateDeps>): Promise<CheckResult | undefined>;
-  /** The extension's global state (FR-30.1 when the last check was). */
-  globalState(): vscode.Memento;
   /** The notifications, pickers and save dialogs: replace one to answer it. */
   dialogs: typeof dialogs;
   /** FR-13.2 a sequence panel VS Code restored after a restart. */
@@ -227,9 +219,6 @@ export function activate(context: vscode.ExtensionContext): SeqcallTestApi {
     vscode.workspace.onDidChangeWorkspaceFolders(() => tree.refresh()),
   );
 
-  // FR-30 updates from the GitHub releases
-  registerUpdater(context, (level, message) => ctl.log(level, message));
-
   // FR-16.10 load the project in the background (after startup; setting seqcall.preloadProject)
   const preloadTimer = setTimeout(() => void ctl.track(ctl.preload()), 1000);
   context.subscriptions.push({ dispose: () => clearTimeout(preloadTimer) });
@@ -309,9 +298,6 @@ export function activate(context: vscode.ExtensionContext): SeqcallTestApi {
     entryPointsRequested: () => tree.isRequested(),
     preloadOf: (root) => ctl.preloadOf(root),
     workspaceProjects: () => ctl.workspaceProjects(),
-    checkForUpdates: (overrides) => checkManually(context, (level, message) => ctl.log(level, message), overrides),
-    checkForUpdatesAutomatically: (overrides) => checkAutomatically(context, (level, message) => ctl.log(level, message), overrides),
-    globalState: () => context.globalState,
     dialogs,
     restoreSequencePanel: (panel) => ctl.restoreSequencePanel(panel),
     setEntryPointsProject: (project) => {

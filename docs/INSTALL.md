@@ -1,7 +1,8 @@
 # Installing Seqcall
 
-Seqcall is not on any marketplace yet. Every release on the GitHub **Releases** page has one
-package per editor family:
+**VS Code** (and Cursor, VSCodium, Windsurf): install **Seqcall** from the extension marketplace, see
+[below](#vs-code-and-cursor-windsurf-vscodium). For the other editors, every release on the GitHub **Releases** page
+has one package per editor family:
 
 | File | For |
 |---|---|
@@ -32,23 +33,21 @@ Please report anything odd on macOS or Windows.
 
 ## VS Code (and Cursor, Windsurf, VSCodium)
 
-**From the UI:** open the Extensions view (Ctrl+Shift+X), click **⋯** at the top, choose
-**Install from VSIX…**, select `seqcall-<version>.vsix` and reload the window if it asks you to.
+**From the marketplace:** open the Extensions view (Ctrl+Shift+X), search for **Seqcall** and click **Install**,
+or run `code --install-extension seqcall.seqcall`. VS Code installs it from the
+[VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=seqcall.seqcall); Cursor, VSCodium and
+Windsurf install it from [Open VSX](https://open-vsx.org/extension/seqcall/seqcall).
 
-**From a terminal:**
-
-```sh
-code --install-extension seqcall-0.1.0.vsix          # Cursor: cursor …, Windsurf: windsurf …, VSCodium: codium …
-```
+**From a release `.vsix`** (offline, or to try a specific version): in the Extensions view click **⋯** at the top,
+choose **Install from VSIX…** and select `seqcall-<version>.vsix`, or run
+`code --install-extension seqcall-0.1.0.vsix` (Cursor: `cursor …`, Windsurf: `windsurf …`, VSCodium: `codium …`).
 
 **Use:** open a TS/JS, C# or PHP file, put the cursor inside a function or method and press
 **Ctrl+Alt+U**, or right-click and choose **Show Sequence Diagram**. Logs are in the Output panel
 under **Seqcall**.
 
-**Update:** Seqcall updates itself from the GitHub releases. It checks once a day, installs a newer
-version and asks you to reload the window; no sign-in needed. **Seqcall: Check for Updates** checks now. Setting
-`seqcall.autoUpdate`: `install` (default), `notify` (ask first) or `off`. You can always install a newer `.vsix` by
-hand the same way as above; it replaces the old one.
+**Update:** the editor updates Seqcall from the marketplace, like any other extension. A `.vsix` installed by hand
+is replaced by installing a newer one the same way, or by installing from the marketplace.
 **Remove:** uninstall it from the Extensions view, or run
 `code --uninstall-extension seqcall.seqcall`.
 

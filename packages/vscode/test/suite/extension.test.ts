@@ -862,31 +862,11 @@ suite('Seqcall extension host', () => {
     api.setEntryPointsProject(undefined);
   });
 
-  test('FR-30 Check for Updates: the command and setting exist; no automatic check in the test host', async () => {
+  test('FR-30.8 updates come from the marketplace: no updater command or setting, no check of GitHub', async () => {
     const pkg = findExtension().packageJSON;
-    assert.ok((await vscode.commands.getCommands(true)).includes('seqcall.checkForUpdates'));
-    assert.strictEqual(vscode.workspace.getConfiguration('seqcall').get('autoUpdate'), 'install');
-    assert.deepStrictEqual(pkg.contributes.configuration.properties['seqcall.autoUpdate'].enum, ['install', 'notify', 'off']);
-    assert.ok(!api.logs().some((l) => l.message.startsWith('update:')), 'no check outside an installed extension');
-  });
-
-  test('FR-30.2 Check for Updates asks GitHub for the latest release of the repository in package.json and installs a newer .vsix', async () => {
-    const pkg = findExtension().packageJSON as { version: string };
-    const urls: string[] = [];
-    const installed: string[] = [];
-    const release = (tag: string) =>
-      (async (input: string | URL | Request) => {
-        const url = String(input);
-        urls.push(url);
-        if (url.endsWith('/releases/latest')) return Response.json({ tag_name: tag, html_url: '', assets: [{ name: `seqcall-${tag.slice(1)}.vsix`, url: 'https://api.github.com/asset/1' }] });
-        return new Response(new Uint8Array([7]));
-      }) as typeof fetch;
-    const newer = await api.checkForUpdates({ fetch: release('v99.0.0'), install: async (_b, r) => void installed.push(r.assetName) });
-    assert.strictEqual(newer?.kind, 'installed');
-    assert.deepStrictEqual(urls, ['https://api.github.com/repos/seqcall/seqcall/releases/latest', 'https://api.github.com/asset/1']);
-    assert.deepStrictEqual(installed, ['seqcall-99.0.0.vsix']);
-    const same = await api.checkForUpdates({ fetch: release(`v${pkg.version}`), install: async () => assert.fail('nothing to install') });
-    assert.deepStrictEqual(same, { kind: 'upToDate', latest: pkg.version });
-    assert.ok(api.logs().some((l) => l.message === `update: Seqcall is up to date (${pkg.version}).`));
+    assert.ok(!(await vscode.commands.getCommands(true)).includes('seqcall.checkForUpdates'));
+    assert.ok(!pkg.contributes.commands.some((c: { command: string }) => c.command === 'seqcall.checkForUpdates'));
+    assert.strictEqual(pkg.contributes.configuration.properties['seqcall.autoUpdate'], undefined);
+    assert.ok(!api.logs().some((l) => l.message.startsWith('update:')), 'no update check');
   });
 });

@@ -15,7 +15,7 @@ on real codebases (after analysis changes), and debugging techniques.
 | Webview | Layout geometry (pure) and DOM behaviour (jsdom) | `packages/webview/test/*.test.ts` | `npx vitest run packages/webview` | ~3 s |
 | Sidecar | Roslyn analysis in-process + one stdio end-to-end | `packages/csharp/tests/Seqcall.CSharp.Tests` (xUnit) | `cd packages/csharp && dotnet test` | ~5 s |
 | Sidecar host / browser mode | Headless controller, JSON-RPC framing, browser mode (token, SSE push, POST intents) | `packages/stdio-host/test/*.test.ts` | `npx vitest run packages/stdio-host` | ~2 s |
-| Self-update (FR-30) | Release check shared by VS Code and Vim (versions, download, GitHub refusals — fake `fetch`); the Vim package swap (real `tar`) | `packages/core/test/update.test.ts`, `packages/stdio-host/test/update.test.ts`, `packages/cli/test/update.test.ts` (editor sides: VS Code extension-host tests, `vim-package.test.ts`, Rider `PluginLogicTest`) | `npx vitest run packages/core/test/update.test.ts packages/stdio-host/test/update.test.ts` | <1 s |
+| Self-update (FR-30) | Release check shared by Vim and the agent CLI (versions, download, GitHub refusals — fake `fetch`); the Vim package swap (real `tar`) | `packages/core/test/update.test.ts`, `packages/stdio-host/test/update.test.ts`, `packages/cli/test/update.test.ts` (editor sides: `vim-package.test.ts`, Rider `PluginLogicTest`) | `npx vitest run packages/core/test/update.test.ts packages/stdio-host/test/update.test.ts` | <1 s |
 | Browser user stories | The real page in headless Chrome against the production browser-mode stack (controller + core on `sample-app`): real clicks reach their buttons, menus, find, the entry-point list, Layers, the class page in step with the sequence page, the editor told to navigate, no overlapping boxes, no page error (§5d) | `packages/stdio-host/test/page.test.ts`, driver `test/cdp.ts` | included in `npm test` (skipped without Chrome) | ~10 s |
 | Vim / Neovim plugin | Real headless Vim 9 and Neovim against the real sidecar; the test plays the browser page (FR-21) | `packages/vim/test/*.test.ts` | `npx vitest run packages/vim` (per editor: skipped without Vim / Neovim) | ~8 s |
 | Rider plugin | RPC client, Node lookup, theme mapping (FR-15.3–15.6); JCEF by a sandboxed smoke run | `packages/rider/src/test/kotlin/…/PluginLogicTest.kt` (JUnit); `packages/rider/scripts/smoke.sh` | `node packages/rider/build.mjs test` (Gradle with Rider's JBR); smoke: docs/RIDER-PLUGIN.md | – |
@@ -160,15 +160,10 @@ Shapes the sample solution lacks: small in-memory projects (§11).
 ## 5c. Self-update smoke run (FR-30)
 
 The unit and plugin tests use a fake GitHub; the real install and restart need a real editor. Recipe: build the
-plugin twice, the current version and a higher one (`version` in `packages/vscode/package.json` or
-`packages/rider/build.gradle.kts`, set it back after); serve the higher one from a small fake GitHub on 127.0.0.1
+plugin twice, the current version and a higher one (`version` in `packages/rider/build.gradle.kts`, set it back
+after); serve the higher one from a small fake GitHub on 127.0.0.1
 (`/repos/seqcall/seqcall/releases/latest` with the asset, the asset url answering 302 to a "storage" url).
 
-- **VS Code**: install the current `.vsix` into an isolated instance (`.vscode-test/vscode-linux-x64-*/bin/code
-  --user-data-dir <u> --extensions-dir <e> --install-extension …`), start it with
-  `SEQCALL_UPDATE_API=http://127.0.0.1:<port>`. ~15 s later the Seqcall output log (`<u>/logs/*/window1/exthost/output_logging_*/*Seqcall.log`) says
-  `update: installed …`; `--list-extensions --show-versions` shows the new version. After a restart only the new
-  extension folder is left.
 - **Rider**: `SEQCALL_UPDATE_API=… SEQCALL_SMOKE_UPDATE=1 packages/rider/scripts/smoke.sh …`, see docs/RIDER-PLUGIN.md.
 - **Vim / Neovim**: automated — `vim-package.test.ts` runs `:SeqcallUpdate` in both editors on an installed copy of
   the package against a fake GitHub (`SEQCALL_UPDATE_API`).
@@ -177,8 +172,8 @@ plugin twice, the current version and a higher one (`version` in `packages/vscod
   `node <dir>/plugins/cache/seqcall/seqcall/<v>/seqcall.cjs update` with `SEQCALL_UPDATE_API`;
   `installed_plugins.json` then has the new version.
 
-What only this run checks: the download follows GitHub's redirect to storage, and VS Code installs a `.vsix` only
-from a `file:` uri (it is written to the temp folder).
+What only this run checks: the download follows GitHub's redirect to storage. VS Code has no updater of its own
+(FR-30.8): the marketplace updates it.
 
 ## 5d. User stories in a real browser
 

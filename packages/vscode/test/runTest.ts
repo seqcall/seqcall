@@ -30,7 +30,7 @@ async function main(): Promise<void> {
         '--skip-welcome',
         '--skip-release-notes',
         `--user-data-dir=${path.join(repo, '.vscode-test', 'user-data')}`,
-        // not ~/.vscode/extensions: an install from a test (FR-30.2) must never reach the developer's own extensions
+        // not ~/.vscode/extensions: a test run must never touch the developer's own extensions
         `--extensions-dir=${path.join(repo, '.vscode-test', 'extensions')}`,
       ],
     });

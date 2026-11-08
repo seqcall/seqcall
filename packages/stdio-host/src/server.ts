@@ -13,7 +13,7 @@ import { HeadlessController, type ControllerOptions, type HostSink } from './con
  * (browser.ts) instead of in the editor. `post` then goes to the pages, and the sidecar asks the
  * editor to open a view's URL with `openBrowser { view, url }` when no page of it is connected.
  */
-export const STDIO_HOST_VERSION = '0.1.0';
+export const STDIO_HOST_VERSION = '0.1.1';
 
 interface RpcIn {
   jsonrpc?: string;

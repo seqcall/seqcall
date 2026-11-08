@@ -17,7 +17,7 @@
     "php",
     "laravel"
   ],
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "publisher": "seqcall",
   "license": "Apache-2.0",
@@ -217,11 +217,6 @@
         "command": "seqcall.freeMemory",
         "title": "Free Memory",
         "category": "Seqcall"
-      },
-      {
-        "command": "seqcall.checkForUpdates",
-        "title": "Check for Updates",
-        "category": "Seqcall"
       }
     ],
     "menus": {
@@ -346,21 +341,6 @@
           "minimum": 1,
           "maximum": 10,
           "description": "Initial expansion depth of a new sequence diagram (1 = direct calls of the root method only). Applies to newly loaded projects."
-        },
-        "seqcall.autoUpdate": {
-          "type": "string",
-          "enum": [
-            "install",
-            "notify",
-            "off"
-          ],
-          "enumDescriptions": [
-            "Install a new release by itself and offer to reload the window.",
-            "Say that a new release is there and install it when you choose Install.",
-            "No automatic check. Seqcall: Check for Updates still works."
-          ],
-          "default": "install",
-          "description": "Updates from the GitHub releases of the Seqcall repository, checked once a day."
         },
         "seqcall.hover": {
           "type": "boolean",

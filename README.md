@@ -16,7 +16,9 @@ code. It runs in VS Code (and Cursor, VSCodium, Windsurf), JetBrains IDEs (Rider
 
 ## Install
 
-Download the package for your editor from the GitHub **Releases** page and follow [docs/INSTALL.md](docs/INSTALL.md)
+**VS Code:** install **Seqcall** from the
+[Marketplace](https://marketplace.visualstudio.com/items?itemName=seqcall.seqcall) (`code --install-extension seqcall.seqcall`).
+**Other editors:** download the package from the GitHub **Releases** page and follow [docs/INSTALL.md](docs/INSTALL.md)
 (packages, requirements per editor and language, updates). In short: VS Code 1.90+ needs nothing else; JetBrains IDEs
 2026.2+ and Vim 9 / Neovim 0.10+ need Node.js 20+; C# projects need the .NET 10 runtime.
 
@@ -124,8 +126,7 @@ Try these on `fixtures/sample-app` from this repository (or on your own code).
 - **Hover** on a call through an interface: which implementation runs and its I/O; on a method name: the entry
   points that reach it (setting `seqcall.hover`).
 - *Seqcall: Show Memory* / *Free Memory*.
-- Updates itself from the GitHub releases (`seqcall.autoUpdate`, *Seqcall: Check for Updates*); see
-  [docs/INSTALL.md](docs/INSTALL.md).
+- Updates come from the VS Code Marketplace / Open VSX, like any other extension.
 
 ## Languages
 

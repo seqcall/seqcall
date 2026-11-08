@@ -7,7 +7,7 @@ import type { HostToSequenceView, SequenceDiagram } from '@seqcall/protocol';
 import type { SeqcallTestApi } from '../../src/extension';
 
 // Runs after extension.test.ts (the runner loads the files in name order): the host's dialogs answered by the
-// test, the updater's own parts, and view messages that suite does not send. Every test opens the diagram it needs.
+// test and view messages that suite does not send. Every test opens the diagram it needs.
 
 const workspaceRoot = () => vscode.workspace.workspaceFolders![0].uri.fsPath;
 const controllerFile = () => path.join(workspaceRoot(), 'src', 'controllers', 'user-controller.ts');
@@ -27,7 +27,7 @@ async function waitFor<T>(what: string, probe: () => T | undefined, timeoutMs = 
 type Render = Extract<HostToSequenceView, { type: 'render' }>;
 type Said = { kind: 'info' | 'warning' | 'error'; message: string; items: string[] };
 
-suite('Seqcall host: dialogs, updater, view messages', () => {
+suite('Seqcall host: dialogs, view messages', () => {
   let api: SeqcallTestApi;
   let original: SeqcallTestApi['dialogs'];
   /** What the host said, oldest first; `reply` picks a button. */
@@ -95,100 +95,6 @@ suite('Seqcall host: dialogs, updater, view messages', () => {
 
   suiteTeardown(() => {
     Object.assign(api.dialogs, original);
-  });
-
-  // ───────────────────────────── FR-30 the updater ─────────────────────────────
-
-  const release = (tag: string, assets = [{ name: `seqcall-${tag.slice(1)}.vsix`, url: 'https://api.github.com/asset/1' }]) =>
-    (async (input: string | URL | Request) => {
-      if (String(input).endsWith('/releases/latest')) return Response.json({ tag_name: tag, html_url: '', assets });
-      return new Response(new Uint8Array([7]));
-    }) as typeof fetch;
-
-  test('FR-30.2 Check for Updates says what it found: no .vsix in the release, an error (as an error)', async () => {
-    const r = await api.checkForUpdates({ fetch: release('v99.0.0', []) });
-    assert.deepStrictEqual(r, { kind: 'noAsset', latest: '99.0.0' });
-    assert.ok(said.some((s) => s.kind === 'info' && s.message === 'The latest Seqcall release (99.0.0) has no .vsix.'));
-    const failed = await api.checkForUpdates({ fetch: (async () => { throw new Error('offline'); }) as typeof fetch });
-    assert.strictEqual(failed?.kind, 'error');
-    assert.ok(said.some((s) => s.kind === 'error' && s.message.startsWith('Could not check for Seqcall updates: ')), JSON.stringify(said));
-    assert.ok(api.logs().some((l) => l.level === 'error' && l.message.startsWith('update: Could not check')));
-  });
-
-  test('FR-30.1 autoUpdate "notify": the release is offered first; Install installs it, a dismissed offer skips it', async () => {
-    const config = vscode.workspace.getConfiguration('seqcall');
-    await config.update('autoUpdate', 'notify', vscode.ConfigurationTarget.Global);
-    try {
-      const installed: string[] = [];
-      const install = async (_b: Uint8Array, r: { assetName: string }) => void installed.push(r.assetName);
-      reply = (s) => (s.message.startsWith('Seqcall 99.0.0 is available') ? 'Install' : undefined);
-      const yes = await api.checkForUpdates({ fetch: release('v99.0.0'), install });
-      assert.strictEqual(yes?.kind, 'installed');
-      assert.deepStrictEqual(installed, ['seqcall-99.0.0.vsix']);
-      assert.deepStrictEqual(saidLike(/is available/)?.items, ['Install', 'Release Notes']);
-      reply = () => undefined;
-      const no = await api.checkForUpdates({ fetch: release('v99.0.0'), install });
-      assert.strictEqual(no?.kind, 'skipped');
-      assert.deepStrictEqual(installed, ['seqcall-99.0.0.vsix'], 'nothing installed after a dismissed offer');
-    } finally {
-      await config.update('autoUpdate', undefined, vscode.ConfigurationTarget.Global);
-    }
-  });
-
-  test('FR-30.2 the .vsix is installed from a temporary file, which is deleted also when VS Code refuses it', async () => {
-    const before = new Set(fs.readdirSync(os.tmpdir()));
-    const r = await api.checkForUpdates({ fetch: release('v99.0.0') }); // one byte: no .vsix
-    assert.strictEqual(r?.kind, 'error', JSON.stringify(r));
-    assert.deepStrictEqual(fs.readdirSync(os.tmpdir()).filter((f) => !before.has(f) && f.endsWith('seqcall-99.0.0.vsix')), []);
-    assert.strictEqual(api.globalState().get('update.installed'), undefined, 'not remembered as installed');
-  });
-
-  test('FR-30.2 smoke runs against a fake GitHub (SEQCALL_UPDATE_API); no request carries a sign-in', async () => {
-    process.env.SEQCALL_UPDATE_API = 'http://127.0.0.1:9/api';
-    try {
-      const urls: string[] = [];
-      const auth: (string | undefined)[] = [];
-      const fetchFn = (async (input: string | URL | Request, init?: RequestInit) => {
-        urls.push(String(input));
-        auth.push((init?.headers as Record<string, string>).Authorization);
-        return release('v0.0.1')(input);
-      }) as typeof fetch;
-      assert.strictEqual((await api.checkForUpdates({ fetch: fetchFn }))?.kind, 'upToDate');
-      assert.ok(urls[0].startsWith('http://127.0.0.1:9/api/repos/'), urls[0]);
-      assert.deepStrictEqual(auth, [undefined]);
-    } finally {
-      delete process.env.SEQCALL_UPDATE_API;
-    }
-  });
-
-  test('FR-30.1 the automatic check: once a day, quiet when up to date, not in "off" mode', async () => {
-    const state = api.globalState();
-    // the earlier manual checks store their time without waiting: it can arrive after a first reset
-    for (let quiet = 0; quiet < 3; ) {
-      quiet = state.get('update.lastCheck') === undefined ? quiet + 1 : 0;
-      await state.update('update.lastCheck', undefined);
-      await new Promise((r) => setTimeout(r, 200));
-    }
-    let checks = 0;
-    const fetchFn = (async (input: string | URL | Request) => (checks++, release('v0.0.1')(input))) as typeof fetch;
-    assert.strictEqual(vscode.workspace.getConfiguration('seqcall').get('autoUpdate'), 'install');
-    said.length = 0;
-    assert.strictEqual((await api.checkForUpdatesAutomatically({ fetch: fetchFn }))?.kind, 'upToDate');
-    assert.strictEqual(said.length, 0, JSON.stringify(said));
-    // a check today: none until tomorrow
-    assert.strictEqual(await api.checkForUpdatesAutomatically({ fetch: fetchFn }), undefined);
-    await state.update('update.lastCheck', Date.now() - 25 * 60 * 60 * 1000);
-    assert.strictEqual((await api.checkForUpdatesAutomatically({ fetch: fetchFn }))?.kind, 'upToDate');
-    assert.strictEqual(checks, 2);
-    // off: no check at all
-    await state.update('update.lastCheck', undefined);
-    const config = vscode.workspace.getConfiguration('seqcall');
-    await config.update('autoUpdate', 'off', vscode.ConfigurationTarget.Global);
-    try {
-      assert.strictEqual(await api.checkForUpdatesAutomatically({ fetch: (async () => assert.fail('no check when off')) as typeof fetch }), undefined);
-    } finally {
-      await config.update('autoUpdate', undefined, vscode.ConfigurationTarget.Global);
-    }
   });
 
   // ───────────────────────────── FR-7.5 / 7.11 / 12.16 / 19.10 config writes ─────────────────────────────

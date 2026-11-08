@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "dev.seqcall"
-version = "0.1.0" // scripts/set-version.mjs
+version = "0.1.1" // scripts/set-version.mjs
 
 repositories {
     mavenCentral()
